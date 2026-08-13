@@ -1,0 +1,62 @@
+{% extends "base/base.html" %}
+
+{% block title %}MediPredictAI — Clinician Authentication{% endblock %}
+
+{% block content %}
+
+<div class="container py-5">
+    <div class="row justify-content-center align-items-center">
+        <div class="col-md-5">
+            <div class="card-premium p-4 p-md-5 shadow-lg">
+                <div class="text-center mb-4">
+                    <div class="sidebar-logo-icon mx-auto mb-3" style="width: 48px; height: 48px; font-size: 1.5rem;">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                    <h3 class="fw-extrabold text-dark tracking-tight mb-1">Clinician Login</h3>
+                    <p class="text-secondary" style="font-size: 0.875rem;">Access HIPAA-compliant AI diagnostic portal</p>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} border-0 shadow-xs rounded-3 mb-3" style="font-size: 0.85rem;">
+                            <i class="bi bi-exclamation-circle-fill me-1"></i> {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold text-dark" style="font-size: 0.85rem;">Username</label>
+                        <div class="position-relative">
+                            <i class="bi bi-person position-absolute text-muted" style="left: 14px; top: 50%; transform: translateY(-50%);"></i>
+                            <input type="text" name="username" class="form-control ps-5" placeholder="Enter clinician username" required style="border-radius: var(--radius-md); padding-top: 0.65rem; padding-bottom: 0.65rem;">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold text-dark" style="font-size: 0.85rem;">Password</label>
+                        <div class="position-relative">
+                            <i class="bi bi-key position-absolute text-muted" style="left: 14px; top: 50%; transform: translateY(-50%);"></i>
+                            <input type="password" name="password" class="form-control ps-5" placeholder="••••••••••••" required style="border-radius: var(--radius-md); padding-top: 0.65rem; padding-bottom: 0.65rem;">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fs-6 shadow-sm mb-3">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Secure Portal Login
+                    </button>
+                </form>
+
+                <div class="text-center pt-3 border-top">
+                    <p class="text-muted mb-2" style="font-size: 0.85rem;">Need new clinical portal access?</p>
+                    <a href="{% url 'register' %}" class="btn btn-soft-primary btn-sm px-4">
+                        Request Registration <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

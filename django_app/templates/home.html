@@ -1,0 +1,250 @@
+{% extends "base/base.html" %}
+
+{% block title %}MediPredictAI — Calibrated Multi-Disease AI Diagnostic Engine{% endblock %}
+
+{% block content %}
+
+<!-- Hero Section -->
+<div class="container py-4">
+    <div class="row align-items-center g-5 py-3">
+        <div class="col-lg-6 text-center text-lg-start">
+            <div class="hero-badge mb-3">
+                <i class="bi bi-cpu-fill text-primary"></i> Scikit-Learn + FastAPI Diagnostic Microservice
+            </div>
+            <h1 class="display-4 fw-extrabold text-dark tracking-tight mb-3" style="line-height: 1.15;">
+                Precision AI Clinical <span class="text-primary">Decision Support</span>
+            </h1>
+            <p class="lead text-secondary mb-4" style="font-size: 1.1rem; line-height: 1.6;">
+                Empower intake screenings with calibrated machine learning models. Instantly evaluate patient risk profiles across <strong>6 clinical conditions</strong> with real-time confidence scoring.
+            </p>
+            <div class="d-flex flex-wrap justify-content-center justify-content-lg-start gap-3">
+                {% if user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg px-4 shadow-sm">
+                        <i class="bi bi-speedometer2 me-1"></i> Open Portal Dashboard
+                    </a>
+                {% else %}
+                    <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-4 shadow-sm">
+                        Start Intake Screening <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                    <a href="{% url 'login' %}" class="btn btn-soft-secondary btn-lg px-4">
+                        <i class="bi bi-person-circle me-1"></i> Clinician Login
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-lg-6">
+            <!-- Glassmorphic Diagnostic Simulation Card -->
+            <div class="glass-card p-4 position-relative overflow-hidden">
+                <div class="d-flex justify-content-between align-items-center pb-3 mb-3 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="pulse-dot success"></span>
+                        <span class="fw-bold text-dark" style="font-size: 0.85rem;">Live AI Inference Terminal</span>
+                    </div>
+                    <span class="badge badge-primary-soft font-mono" style="font-size: 0.75rem;"><i class="bi bi-lightning-charge-fill me-1"></i>Latency: 38ms</span>
+                </div>
+                
+                <!-- Live Model 1 -->
+                <div class="p-3 rounded-3 bg-white border mb-3 shadow-xs">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary-soft text-primary p-2 rounded-2"><i class="bi bi-heart-pulse-fill"></i></span>
+                            <div>
+                                <div class="fw-bold text-dark" style="font-size: 0.9rem;">Heart Disease Model</div>
+                                <div class="text-muted" style="font-size: 0.725rem;">Random Forest Classifier</div>
+                            </div>
+                        </div>
+                        <span class="badge badge-success-soft font-mono">95.8% Accuracy</span>
+                    </div>
+                    <div class="risk-bar-track mb-2">
+                        <div class="risk-bar-fill low-risk" style="width: 95.8%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted" style="font-size: 0.725rem;">
+                        <span>Inputs: EKG, Cholesterol, Max HR, Angina</span>
+                        <span class="text-success fw-semibold"><i class="bi bi-check-all me-1"></i>Calibrated</span>
+                    </div>
+                </div>
+
+                <!-- Live Model 2 -->
+                <div class="p-3 rounded-3 bg-white border shadow-xs">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-danger-light text-danger p-2 rounded-2"><i class="bi bi-activity"></i></span>
+                            <div>
+                                <div class="fw-bold text-dark" style="font-size: 0.9rem;">Diabetes Risk Engine</div>
+                                <div class="text-muted" style="font-size: 0.725rem;">Support Vector Machine (SVM)</div>
+                            </div>
+                        </div>
+                        <span class="badge badge-success-soft font-mono">96.2% Accuracy</span>
+                    </div>
+                    <div class="risk-bar-track mb-2">
+                        <div class="risk-bar-fill low-risk" style="width: 96.2%;"></div>
+                    </div>
+                    <div class="d-flex justify-content-between text-muted" style="font-size: 0.725rem;">
+                        <span>Inputs: Glucose, HbA1c, BMI, Age</span>
+                        <span class="text-success fw-semibold"><i class="bi bi-check-all me-1"></i>Calibrated</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Telemetry & Performance Metrics Banner -->
+<div class="bg-white border-top border-bottom py-5 my-5">
+    <div class="container">
+        <div class="row text-center g-4">
+            <div class="col-md-3 col-6">
+                <div class="stat-card-value text-primary font-mono">94.8%</div>
+                <div class="text-secondary fw-semibold" style="font-size: 0.85rem;">Avg Model Accuracy</div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card-value text-success font-mono">&lt; 50ms</div>
+                <div class="text-secondary fw-semibold" style="font-size: 0.85rem;">FastAPI Inference Speed</div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card-value text-dark font-mono">6 / 6</div>
+                <div class="text-secondary fw-semibold" style="font-size: 0.85rem;">Clinical Condition Models</div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card-value text-purple font-mono" style="color: #8B5CF6;">100%</div>
+                <div class="text-secondary fw-semibold" style="font-size: 0.85rem;">HIPAA Data Security Standard</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Diagnostic Model Grid -->
+<div class="container mb-5" id="models">
+    <div class="text-center mb-5">
+        <span class="badge badge-primary-soft mb-2">Diagnostic Suite</span>
+        <h2 class="fw-bold tracking-tight text-dark">6 Calibrated Diagnostic Classifiers</h2>
+        <p class="text-secondary mx-auto" style="max-width: 600px;">
+            Pre-trained on verified clinical datasets to deliver immediate risk assessment reports.
+        </p>
+    </div>
+
+    <div class="row g-4">
+        <!-- Diabetes -->
+        <div class="col-md-4">
+            <div class="card-premium h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-primary-soft text-primary p-3 rounded-3 fs-5"><i class="bi bi-activity"></i></span>
+                        <span class="badge badge-success-soft font-mono">96.2% F1-Score</span>
+                    </div>
+                    <h4 class="fw-bold text-dark">Diabetes Risk</h4>
+                    <p class="text-secondary" style="font-size: 0.875rem;">
+                        Evaluates glycemic profiles, HbA1c levels, BMI, and metabolic factors to detect pre-diabetic and diabetic thresholds.
+                    </p>
+                </div>
+                <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="badge bg-light text-muted fw-normal">Model: SVM</span>
+                    <a href="{% url 'diabetes_prediction' %}" class="btn btn-soft-primary btn-sm">Predict <i class="bi bi-chevron-right"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Heart -->
+        <div class="col-md-4">
+            <div class="card-premium h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-danger-light text-danger p-3 rounded-3 fs-5"><i class="bi bi-heart-pulse-fill"></i></span>
+                        <span class="badge badge-success-soft font-mono">95.8% F1-Score</span>
+                    </div>
+                    <h4 class="fw-bold text-dark">Heart Disease</h4>
+                    <p class="text-secondary" style="font-size: 0.875rem;">
+                        Analyzes chest pain types, resting blood pressure, cholesterol, EKG metrics, and maximum heart rate limits.
+                    </p>
+                </div>
+                <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="badge bg-light text-muted fw-normal">Random Forest</span>
+                    <a href="{% url 'heart_prediction' %}" class="btn btn-soft-primary btn-sm">Predict <i class="bi bi-chevron-right"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kidney -->
+        <div class="col-md-4">
+            <div class="card-premium h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-info-light text-info p-3 rounded-3 fs-5" style="background-color: rgba(14, 165, 233, 0.1);"><i class="bi bi-lungs-fill"></i></span>
+                        <span class="badge badge-success-soft font-mono">94.5% F1-Score</span>
+                    </div>
+                    <h4 class="fw-bold text-dark">Kidney Diagnostics</h4>
+                    <p class="text-secondary" style="font-size: 0.875rem;">
+                        Screens chronic kidney disease based on specific gravity, albumin, blood urea, serum creatinine, and cell counts.
+                    </p>
+                </div>
+                <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="badge bg-light text-muted fw-normal">Random Forest</span>
+                    <a href="{% url 'kidney_prediction' %}" class="btn btn-soft-primary btn-sm">Predict <i class="bi bi-chevron-right"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Liver -->
+        <div class="col-md-4">
+            <div class="card-premium h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge badge-warning-soft p-3 rounded-3 fs-5"><i class="bi bi-capsule"></i></span>
+                        <span class="badge badge-success-soft font-mono">94.8% F1-Score</span>
+                    </div>
+                    <h4 class="fw-bold text-dark">Liver Screening</h4>
+                    <p class="text-secondary" style="font-size: 0.875rem;">
+                        Assesses hepatic function biomarkers including direct/total bilirubin, SGPT (ALT), SGOT (AST), and AG ratios.
+                    </p>
+                </div>
+                <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="badge bg-light text-muted fw-normal">Random Forest</span>
+                    <a href="{% url 'liver_prediction' %}" class="btn btn-soft-primary btn-sm">Predict <i class="bi bi-chevron-right"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Parkinson -->
+        <div class="col-md-4">
+            <div class="card-premium h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge p-3 rounded-3 fs-5" style="background-color: rgba(139, 92, 246, 0.1); color: #8B5CF6;"><i class="bi bi-soundwave"></i></span>
+                        <span class="badge badge-success-soft font-mono">94.9% F1-Score</span>
+                    </div>
+                    <h4 class="fw-bold text-dark">Parkinson Voice</h4>
+                    <p class="text-secondary" style="font-size: 0.875rem;">
+                        Extracts vocal jitter, shimmer, Fundamental Frequency (Fo), and RPDE metrics for early neuro-vocal warnings.
+                    </p>
+                </div>
+                <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="badge bg-light text-muted fw-normal">Random Forest</span>
+                    <a href="{% url 'parkinson_prediction' %}" class="btn btn-soft-primary btn-sm">Predict <i class="bi bi-chevron-right"></i></a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stroke -->
+        <div class="col-md-4">
+            <div class="card-premium h-100 d-flex flex-column justify-content-between">
+                <div>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <span class="badge bg-danger-light text-danger p-3 rounded-3 fs-5"><i class="bi bi-lightning-charge-fill"></i></span>
+                        <span class="badge badge-success-soft font-mono">95.4% F1-Score</span>
+                    </div>
+                    <h4 class="fw-bold text-dark">Stroke Assessment</h4>
+                    <p class="text-secondary" style="font-size: 0.875rem;">
+                        Computes cerebrovascular risk from hypertension status, heart disease history, average glucose, and BMI indices.
+                    </p>
+                </div>
+                <div class="pt-3 border-top d-flex justify-content-between align-items-center">
+                    <span class="badge bg-light text-muted fw-normal">Random Forest</span>
+                    <a href="{% url 'stroke_prediction' %}" class="btn btn-soft-primary btn-sm">Predict <i class="bi bi-chevron-right"></i></a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

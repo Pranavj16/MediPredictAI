@@ -1,0 +1,97 @@
+<a href="{% url 'dashboard' %}" class="sidebar-logo">
+    <div class="sidebar-logo-icon">
+        <i class="bi bi-shield-plus"></i>
+    </div>
+    <div class="d-flex flex-column">
+        <span class="tracking-tight">MediPredict<span class="text-primary">AI</span></span>
+        <span class="text-muted fw-normal" style="font-size: 0.7rem; line-height: 1;">Clinical Engine v2.5</span>
+    </div>
+</a>
+
+<div class="sidebar-section-title">Overview</div>
+<ul class="nav nav-pills flex-column mb-2">
+    <li class="nav-item">
+        <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+            <i class="bi bi-grid-fill"></i>
+            <span>Dashboard</span>
+        </a>
+    </li>
+</ul>
+
+<div class="sidebar-section-title">AI Disease Diagnostics</div>
+<ul class="nav nav-pills flex-column mb-auto">
+    
+    <li class="nav-item">
+        <a href="{% url 'diabetes_prediction' %}" class="nav-link {% if request.resolver_match.url_name == 'diabetes_prediction' %}active{% endif %}">
+            <i class="bi bi-activity text-primary"></i>
+            <span>Diabetes Risk</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a href="{% url 'heart_prediction' %}" class="nav-link {% if request.resolver_match.url_name == 'heart_prediction' %}active{% endif %}">
+            <i class="bi bi-heart-pulse-fill text-danger"></i>
+            <span>Heart Analysis</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a href="{% url 'kidney_prediction' %}" class="nav-link {% if request.resolver_match.url_name == 'kidney_prediction' %}active{% endif %}">
+            <i class="bi bi-lungs-fill text-info"></i>
+            <span>Kidney Screening</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a href="{% url 'liver_prediction' %}" class="nav-link {% if request.resolver_match.url_name == 'liver_prediction' %}active{% endif %}">
+            <i class="bi bi-capsule text-warning"></i>
+            <span>Liver Assessment</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a href="{% url 'parkinson_prediction' %}" class="nav-link {% if request.resolver_match.url_name == 'parkinson_prediction' %}active{% endif %}">
+            <i class="bi bi-soundwave text-purple" style="color: #8B5CF6;"></i>
+            <span>Parkinson Voice</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a href="{% url 'stroke_prediction' %}" class="nav-link {% if request.resolver_match.url_name == 'stroke_prediction' %}active{% endif %}">
+            <i class="bi bi-lightning-charge-fill text-danger"></i>
+            <span>Stroke Assessment</span>
+        </a>
+    </li>
+
+</ul>
+
+<div class="sidebar-section-title">Engine Telemetry</div>
+<div class="px-2 py-2 mb-3 rounded-3" style="background-color: var(--background); border: 1px solid var(--border);">
+    <div class="d-flex align-items-center justify-content-between mb-1" style="font-size: 0.75rem;">
+        <span class="text-muted fw-semibold">FastAPI Microservice</span>
+        <span class="pulse-dot success"></span>
+    </div>
+    <div class="d-flex align-items-center justify-content-between" style="font-size: 0.75rem;">
+        <span class="fw-bold text-dark">Latency</span>
+        <span class="font-mono text-success fw-bold">38 ms</span>
+    </div>
+</div>
+
+<div class="sidebar-footer">
+    <div class="d-flex align-items-center gap-3 p-2 rounded-3" style="background: rgba(241, 245, 249, 0.7);">
+        <div class="avatar bg-primary text-white d-flex align-items-center justify-content-center rounded-circle shadow-sm" style="width: 38px; height: 38px; font-weight: 700; font-family: var(--font-heading);">
+            {{ user.username|slice:":1"|upper }}
+        </div>
+        <div class="user-info overflow-hidden">
+            <div class="fw-bold text-truncate text-dark" style="font-size: 0.85rem;">
+                Dr. {{ user.last_name|default:user.username }}
+            </div>
+            <div class="text-muted text-truncate" style="font-size: 0.725rem;">
+                Authorized Clinician
+            </div>
+        </div>
+        <a href="{% url 'logout' %}" class="ms-auto text-muted text-hover-danger p-1" title="Logout">
+            <i class="bi bi-box-arrow-right fs-6"></i>
+        </a>
+    </div>
+</div>

@@ -1,0 +1,260 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}MediPredictAI — Kidney Diagnostics{% endblock %}
+
+{% block page_title %}Kidney Disease Diagnostics{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <!-- Form Card -->
+    <div class="col-lg-6">
+        <div class="card-premium">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-info-light text-info p-2 fs-5 rounded-3" style="background-color: rgba(14, 165, 233, 0.1);"><i class="bi bi-lungs-fill"></i></span>
+                    <div>
+                        <h4 class="mb-0 fw-bold text-dark tracking-tight">Chronic Kidney Disease Screening</h4>
+                        <p class="text-secondary mb-0" style="font-size: 0.8rem;">Evaluate renal biomarkers, cell counts, and filtration indicators.</p>
+                    </div>
+                </div>
+                <span class="badge bg-light text-muted font-mono" style="font-size: 0.75rem;">Model: Random Forest</span>
+            </div>
+
+            <!-- Presets Bar -->
+            <div class="preset-bar mb-4">
+                <span class="fw-semibold text-dark" style="font-size: 0.8rem;"><i class="bi bi-magic text-primary me-1"></i> Demo Presets:</span>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-soft-primary btn-sm py-1" onclick="fillKidneyNormal()">
+                        <i class="bi bi-check-circle me-1 text-success"></i> Low Risk Sample
+                    </button>
+                    <button type="button" class="btn btn-soft-secondary btn-sm py-1 text-danger" onclick="fillKidneyHighRisk()">
+                        <i class="bi bi-exclamation-triangle me-1"></i> High Risk Sample
+                    </button>
+                </div>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-body overflow-auto" style="max-height: 520px; padding-right: 5px;">
+                    {{ form.as_p }}
+                </div>
+                <div class="d-flex gap-3 mt-4 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary px-4 py-2">
+                        <i class="bi bi-cpu-fill"></i> Execute AI Diagnosis
+                    </button>
+                    <a href="{% url 'kidney_prediction' %}" class="btn btn-soft-secondary py-2">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset Form
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Card -->
+    <div class="col-lg-6">
+        {% if prediction %}
+            <div class="card-premium h-100" style="background: linear-gradient(145deg, #FFFFFF 0%, rgba(59, 130, 246, 0.03) 100%);">
+                <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="badge bg-primary-soft text-primary p-2 fs-5 rounded-3"><i class="bi bi-clipboard2-pulse-fill"></i></span>
+                        <div>
+                            <h4 class="mb-0 fw-bold text-dark tracking-tight">AI Renal Diagnostic Report</h4>
+                            <p class="text-secondary mb-0" style="font-size: 0.8rem;">Random Forest Classifier Evaluation</p>
+                        </div>
+                    </div>
+                    <span class="badge badge-success-soft font-mono">Inferred in 31ms</span>
+                </div>
+
+                <div class="row g-3 text-center mb-4">
+                    <div class="col-6">
+                        <div class="p-3 border rounded-3 bg-white shadow-xs">
+                            <div class="text-muted fw-bold mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase;">DIAGNOSIS STATUS</div>
+                            {% if prediction.prediction %}
+                                <span class="badge badge-danger-soft fs-6 p-2 w-100">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Positive (High Risk)
+                                </span>
+                            {% else %}
+                                <span class="badge badge-success-soft fs-6 p-2 w-100">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Negative (Low Risk)
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="p-3 border rounded-3 bg-white shadow-xs">
+                            <div class="text-muted fw-bold mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase;">CONFIDENCE PROBABILITY</div>
+                            <h3 class="mb-0 font-mono fw-extrabold text-dark">
+                                {{ prediction.probability }}%
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Radial Gauge -->
+                <div class="my-3 text-center">
+                    <div class="gauge-container">
+                        <canvas id="kidneyGaugeCanvas"></canvas>
+                        <div class="gauge-center-text">
+                            <div class="gauge-center-val font-mono {% if prediction.prediction %}text-danger{% else %}text-success{% endif %}">
+                                {{ prediction.probability }}%
+                            </div>
+                            <div class="gauge-center-lbl">Risk Score</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="my-3">
+                    <div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
+                        <span class="text-muted fw-semibold">Renal Risk Index</span>
+                        <span class="fw-bold text-dark font-mono">{{ prediction.probability }}%</span>
+                    </div>
+                    <div class="risk-bar-track">
+                        <div class="risk-bar-fill {% if prediction.prediction %}high-risk{% else %}low-risk{% endif %}" style="width: {{ prediction.probability }}%;"></div>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="mt-4">
+                    {% if prediction.prediction %}
+                        <div class="recommendation-box danger">
+                            <h6 class="fw-bold text-danger mb-2"><i class="bi bi-shield-exclamation me-1"></i> AI Recommended Next Actions</h6>
+                            <ul class="mb-0 text-secondary ps-3" style="font-size: 0.825rem;">
+                                <li>Urgent referral for nephrological evaluation and eGFR calculation.</li>
+                                <li>Schedule renal ultrasound and 24-hour urine protein clearance test.</li>
+                                <li>Monitor serum creatinine, blood urea nitrogen (BUN), and electrolytes.</li>
+                                <li>Adjust dosage of any nephrotoxic medications under physician supervision.</li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <div class="recommendation-box success">
+                            <h6 class="fw-bold text-success mb-2"><i class="bi bi-shield-check me-1"></i> AI Clinical Guidance</h6>
+                            <ul class="mb-0 text-secondary ps-3" style="font-size: 0.825rem;">
+                                <li>Maintain optimal daily fluid intake (2-3 liters of water).</li>
+                                <li>Control blood pressure within standard clinical thresholds (<120/80 mmHg).</li>
+                                <li>Schedule routine annual serum creatinine and urinalysis.</li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Toolbar -->
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <button class="btn btn-soft-secondary btn-sm" onclick="window.print()">
+                        <i class="bi bi-printer"></i> Print Report
+                    </button>
+                </div>
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="card-premium h-100 d-flex flex-column justify-content-center align-items-center text-center p-5" style="border-style: dashed; border-width: 2px;">
+                <div class="p-3 bg-light rounded-circle text-muted mb-3">
+                    <i class="bi bi-lungs text-info fs-1"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Awaiting Patient Diagnostic Data</h5>
+                <p class="text-secondary mx-auto mb-3" style="max-width: 320px; font-size: 0.85rem;">
+                    Fill out the patient lab metrics or use a quick demo preset button.
+                </p>
+                <button type="button" class="btn btn-soft-primary btn-sm" onclick="fillKidneyNormal()">
+                    <i class="bi bi-magic me-1"></i> Load Low Risk Sample
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function setVal(name, val) {
+        const el = document.querySelector(`[name="${name}"]`);
+        if (el) el.value = val;
+    }
+
+    function fillKidneyNormal() {
+        setVal('age', 40);
+        setVal('bp', 80);
+        setVal('sg', 1.020);
+        setVal('al', 0);
+        setVal('su', 0);
+        setVal('rbc', 'normal');
+        setVal('pc', 'normal');
+        setVal('pcc', 'notpresent');
+        setVal('ba', 'notpresent');
+        setVal('bgr', 110);
+        setVal('bu', 30);
+        setVal('sc', 0.9);
+        setVal('sod', 138);
+        setVal('pot', 4.5);
+        setVal('hemo', 15.2);
+        setVal('pcv', 44);
+        setVal('wc', 7800);
+        setVal('rc', 5.2);
+        setVal('htn', 'no');
+        setVal('dm', 'no');
+        setVal('cad', 'no');
+        setVal('appet', 'good');
+        setVal('pe', 'no');
+        setVal('ane', 'no');
+    }
+
+    function fillKidneyHighRisk() {
+        setVal('age', 62);
+        setVal('bp', 90);
+        setVal('sg', 1.010);
+        setVal('al', 3);
+        setVal('su', 2);
+        setVal('rbc', 'abnormal');
+        setVal('pc', 'abnormal');
+        setVal('pcc', 'present');
+        setVal('ba', 'present');
+        setVal('bgr', 220);
+        setVal('bu', 85);
+        setVal('sc', 3.8);
+        setVal('sod', 128);
+        setVal('pot', 5.8);
+        setVal('hemo', 9.4);
+        setVal('pcv', 31);
+        setVal('wc', 11200);
+        setVal('rc', 3.4);
+        setVal('htn', 'yes');
+        setVal('dm', 'yes');
+        setVal('cad', 'yes');
+        setVal('appet', 'poor');
+        setVal('pe', 'yes');
+        setVal('ane', 'yes');
+    }
+
+    {% if prediction %}
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('kidneyGaugeCanvas');
+            if (ctx) {
+                const prob = {{ prediction.probability }};
+                const isPositive = {% if prediction.prediction %}true{% else %}false{% endif %};
+                const color = isPositive ? '#F43F5E' : '#10B981';
+
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        datasets: [{
+                            data: [prob, 100 - prob],
+                            backgroundColor: [color, '#E2E8F0'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        cutout: '80%',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: { enabled: false },
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+        });
+    {% endif %}
+</script>
+
+{% endblock %}

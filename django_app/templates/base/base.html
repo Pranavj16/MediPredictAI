@@ -1,0 +1,107 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MediPredictAI — AI Clinical Decision Support Platform{% endblock %}</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap CSS & Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <!-- Custom Style System -->
+    <link href="{% static 'css/style.css' %}" rel="stylesheet">
+
+    <!-- Chart.js CDN for Interactive Risk Meters -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+    <!-- Public Navigation Bar -->
+    <nav class="navbar navbar-expand-lg glass-navbar sticky-top shadow-sm py-3">
+        <div class="container">
+
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <div class="sidebar-logo-icon">
+                    <i class="bi bi-shield-plus"></i>
+                </div>
+                <div>
+                    <span class="fw-bold text-dark fs-5 tracking-tight">MediPredict<span class="text-primary">AI</span></span>
+                    <span class="badge bg-primary-soft ms-2" style="font-size: 0.65rem;">v2.5 Enterprise</span>
+                </div>
+            </a>
+
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <div class="navbar-nav ms-auto gap-3 align-items-center mt-3 mt-lg-0">
+                    <a class="nav-link text-secondary fw-semibold px-2" href="/">Home</a>
+                    <a class="nav-link text-secondary fw-semibold px-2" href="#models">Clinical Models</a>
+                    
+                    {% if user.is_authenticated %}
+                        <a class="btn btn-primary px-4" href="{% url 'dashboard' %}">
+                            <i class="bi bi-speedometer2"></i> Clinical Portal
+                        </a>
+                    {% else %}
+                        <a class="btn btn-soft-secondary px-3" href="{% url 'login' %}">
+                            <i class="bi bi-lock me-1"></i> Clinician Login
+                        </a>
+                        <a class="btn btn-primary px-4" href="{% url 'register' %}">
+                            Get Started <i class="bi bi-arrow-right me-0 ms-1"></i>
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    </nav>
+
+    <!-- Main Page Body -->
+    <main class="py-4">
+        {% block content %}
+
+        {% endblock %}
+    </main>
+
+    <!-- Public Footer -->
+    <footer class="footer py-5 border-top bg-white mt-5">
+        <div class="container text-center text-md-start">
+            <div class="row g-4 align-items-center">
+                <div class="col-md-6">
+                    <div class="d-flex align-items-center gap-2 mb-2 justify-content-center justify-content-md-start">
+                        <div class="sidebar-logo-icon" style="width: 28px; height: 28px; font-size: 0.9rem;">
+                            <i class="bi bi-shield-plus"></i>
+                        </div>
+                        <span class="fw-bold text-dark fs-6">MediPredictAI Diagnostic Suite</span>
+                    </div>
+                    <p class="text-muted mb-0" style="font-size: 0.85rem;">
+                        Real-time AI diagnostic screening powered by calibrated scikit-learn models & FastAPI micro-services. Intended for authorized medical professional decision support.
+                    </p>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <div class="d-flex justify-content-center justify-content-md-end gap-3 mb-2" style="font-size: 0.85rem;">
+                        <span class="badge badge-success-soft"><i class="bi bi-check-circle-fill"></i> HIPAA Standard Compliant</span>
+                        <span class="badge badge-primary-soft"><i class="bi bi-lightning-fill"></i> Sub-50ms Inference</span>
+                    </div>
+                    <div class="text-muted" style="font-size: 0.8rem;">
+                        &copy; {% now "Y" %} MediPredictAI. All Rights Reserved.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5.3 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

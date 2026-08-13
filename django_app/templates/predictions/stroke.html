@@ -1,0 +1,232 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}MediPredictAI — Stroke Risk Assessment{% endblock %}
+
+{% block page_title %}Stroke Risk Assessment{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <!-- Form Card -->
+    <div class="col-lg-6">
+        <div class="card-premium">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-danger-light text-danger p-2 fs-5 rounded-3"><i class="bi bi-lightning-charge-fill"></i></span>
+                    <div>
+                        <h4 class="mb-0 fw-bold text-dark tracking-tight">Cerebrovascular Stroke Risk</h4>
+                        <p class="text-secondary mb-0" style="font-size: 0.8rem;">Evaluate stroke likelihood from hypertension, glucose, and lifestyle factors.</p>
+                    </div>
+                </div>
+                <span class="badge bg-light text-muted font-mono" style="font-size: 0.75rem;">Model: Random Forest</span>
+            </div>
+
+            <!-- Presets Bar -->
+            <div class="preset-bar mb-4">
+                <span class="fw-semibold text-dark" style="font-size: 0.8rem;"><i class="bi bi-magic text-primary me-1"></i> Demo Presets:</span>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-soft-primary btn-sm py-1" onclick="fillStrokeNormal()">
+                        <i class="bi bi-check-circle me-1 text-success"></i> Low Risk Sample
+                    </button>
+                    <button type="button" class="btn btn-soft-secondary btn-sm py-1 text-danger" onclick="fillStrokeHighRisk()">
+                        <i class="bi bi-exclamation-triangle me-1"></i> High Risk Sample
+                    </button>
+                </div>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="form-body">
+                    {{ form.as_p }}
+                </div>
+                <div class="d-flex gap-3 mt-4 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary px-4 py-2">
+                        <i class="bi bi-cpu-fill"></i> Execute AI Diagnosis
+                    </button>
+                    <a href="{% url 'stroke_prediction' %}" class="btn btn-soft-secondary py-2">
+                        <i class="bi bi-arrow-counterclockwise"></i> Reset Form
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results Card -->
+    <div class="col-lg-6">
+        {% if prediction %}
+            <div class="card-premium h-100" style="background: linear-gradient(145deg, #FFFFFF 0%, rgba(59, 130, 246, 0.03) 100%);">
+                <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="badge bg-primary-soft text-primary p-2 fs-5 rounded-3"><i class="bi bi-clipboard2-pulse-fill"></i></span>
+                        <div>
+                            <h4 class="mb-0 fw-bold text-dark tracking-tight">AI Stroke Diagnostics Report</h4>
+                            <p class="text-secondary mb-0" style="font-size: 0.8rem;">Random Forest Classifier Evaluation</p>
+                        </div>
+                    </div>
+                    <span class="badge badge-success-soft font-mono">Inferred in 30ms</span>
+                </div>
+
+                <div class="row g-3 text-center mb-4">
+                    <div class="col-6">
+                        <div class="p-3 border rounded-3 bg-white shadow-xs">
+                            <div class="text-muted fw-bold mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase;">DIAGNOSIS STATUS</div>
+                            {% if prediction.prediction %}
+                                <span class="badge badge-danger-soft fs-6 p-2 w-100">
+                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Positive (High Risk)
+                                </span>
+                            {% else %}
+                                <span class="badge badge-success-soft fs-6 p-2 w-100">
+                                    <i class="bi bi-check-circle-fill me-1"></i> Negative (Low Risk)
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="col-6">
+                        <div class="p-3 border rounded-3 bg-white shadow-xs">
+                            <div class="text-muted fw-bold mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase;">CONFIDENCE PROBABILITY</div>
+                            <h3 class="mb-0 font-mono fw-extrabold text-dark">
+                                {{ prediction.probability }}%
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Radial Gauge -->
+                <div class="my-3 text-center">
+                    <div class="gauge-container">
+                        <canvas id="strokeGaugeCanvas"></canvas>
+                        <div class="gauge-center-text">
+                            <div class="gauge-center-val font-mono {% if prediction.prediction %}text-danger{% else %}text-success{% endif %}">
+                                {{ prediction.probability }}%
+                            </div>
+                            <div class="gauge-center-lbl">Risk Score</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="my-3">
+                    <div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
+                        <span class="text-muted fw-semibold">Stroke Risk Index</span>
+                        <span class="fw-bold text-dark font-mono">{{ prediction.probability }}%</span>
+                    </div>
+                    <div class="risk-bar-track">
+                        <div class="risk-bar-fill {% if prediction.prediction %}high-risk{% else %}low-risk{% endif %}" style="width: {{ prediction.probability }}%;"></div>
+                    </div>
+                </div>
+
+                <!-- Recommendations -->
+                <div class="mt-4">
+                    {% if prediction.prediction %}
+                        <div class="recommendation-box danger">
+                            <h6 class="fw-bold text-danger mb-2"><i class="bi bi-shield-exclamation me-1"></i> AI Recommended Next Actions</h6>
+                            <ul class="mb-0 text-secondary ps-3" style="font-size: 0.825rem;">
+                                <li>Urgent referral for neurological evaluation and carotid artery duplex scan.</li>
+                                <li>Order head CT / MRI to screen for micro-vascular ischemia.</li>
+                                <li>Intensify blood pressure control and antihypertensive therapy.</li>
+                                <li>Review smoking cessation and strict glycemic control protocols.</li>
+                            </ul>
+                        </div>
+                    {% else %}
+                        <div class="recommendation-box success">
+                            <h6 class="fw-bold text-success mb-2"><i class="bi bi-shield-check me-1"></i> AI Clinical Guidance</h6>
+                            <ul class="mb-0 text-secondary ps-3" style="font-size: 0.825rem;">
+                                <li>Maintain optimal blood pressure (<120/80 mmHg).</li>
+                                <li>Engage in routine aerobic exercise and sodium-restricted diet.</li>
+                                <li>Schedule annual cardiovascular and glycemic screening.</li>
+                            </ul>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Toolbar -->
+                <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
+                    <button class="btn btn-soft-secondary btn-sm" onclick="window.print()">
+                        <i class="bi bi-printer"></i> Print Report
+                    </button>
+                </div>
+            </div>
+        {% else %}
+            <!-- Empty State -->
+            <div class="card-premium h-100 d-flex flex-column justify-content-center align-items-center text-center p-5" style="border-style: dashed; border-width: 2px;">
+                <div class="p-3 bg-light rounded-circle text-muted mb-3">
+                    <i class="bi bi-lightning-charge text-danger fs-1"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Awaiting Patient Diagnostic Data</h5>
+                <p class="text-secondary mx-auto mb-3" style="max-width: 320px; font-size: 0.85rem;">
+                    Submit patient parameters or click a quick demo preset button.
+                </p>
+                <button type="button" class="btn btn-soft-primary btn-sm" onclick="fillStrokeNormal()">
+                    <i class="bi bi-magic me-1"></i> Load Low Risk Sample
+                </button>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function setVal(name, val) {
+        const el = document.querySelector(`[name="${name}"]`);
+        if (el) el.value = val;
+    }
+
+    function fillStrokeNormal() {
+        setVal('gender', 'Female');
+        setVal('age', 32);
+        setVal('hypertension', 0);
+        setVal('heart_disease', 0);
+        setVal('ever_married', 'Yes');
+        setVal('work_type', 'Private');
+        setVal('Residence_type', 'Urban');
+        setVal('avg_glucose_level', 88.5);
+        setVal('bmi', 23.2);
+        setVal('smoking_status', 'never smoked');
+    }
+
+    function fillStrokeHighRisk() {
+        setVal('gender', 'Male');
+        setVal('age', 69);
+        setVal('hypertension', 1);
+        setVal('heart_disease', 1);
+        setVal('ever_married', 'Yes');
+        setVal('work_type', 'Self-employed');
+        setVal('Residence_type', 'Urban');
+        setVal('avg_glucose_level', 228.69);
+        setVal('bmi', 36.6);
+        setVal('smoking_status', 'smokes');
+    }
+
+    {% if prediction %}
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('strokeGaugeCanvas');
+            if (ctx) {
+                const prob = {{ prediction.probability }};
+                const isPositive = {% if prediction.prediction %}true{% else %}false{% endif %};
+                const color = isPositive ? '#F43F5E' : '#10B981';
+
+                new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        datasets: [{
+                            data: [prob, 100 - prob],
+                            backgroundColor: [color, '#E2E8F0'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        cutout: '80%',
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            tooltip: { enabled: false },
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+        });
+    {% endif %}
+</script>
+
+{% endblock %}
