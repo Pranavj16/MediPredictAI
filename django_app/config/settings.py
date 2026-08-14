@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +22,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure--dqfyn1f785rxs31!$y=0)2n45fh+7oq(e+yz5-r9)gdcnli-c'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure--dqfyn1f785rxs31!$y=0)2n45fh+7oq(e+yz5-r9)gdcnli-c')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() in ['true', '1']
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '*').split(',')
 
 
 # Application definition
@@ -49,6 +51,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -81,14 +84,11 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'medipredict_db',
-        'USER': 'postgres',
-        'PASSWORD': 'admin@123',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': dj_database_url.config(
+        default='postgresql://postgres:admin%40123@localhost:5432/medipredict_db',
+        conn_max_age=600,
+        ssl_require=not DEBUG
+    )
 }
 
 # Password validation
@@ -129,6 +129,13 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_URL = "login"

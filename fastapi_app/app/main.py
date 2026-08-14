@@ -6,10 +6,20 @@ from app.routes.kidney_route import router as kidney_router
 from app.routes.liver_route import router as liver_router
 from app.routes.parkinson_route import router as parkinson_router
 from app.routes.stroke_route import router as stroke_router
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="MediPredict AI API",
     version="1.0.0"
+)
+
+# Enable CORS for production readiness
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 app.include_router(diabetes_router)
