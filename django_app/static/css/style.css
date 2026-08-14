@@ -548,3 +548,33 @@ form p input:focus, form p select:focus, form p textarea:focus,
 .tracking-tight {
     letter-spacing: -0.03em;
 }
+
+/* Django Form Validation Error List */
+.errorlist {
+    list-style: none;
+    padding: 0.5rem 0.75rem;
+    margin: 0.25rem 0 0.5rem 0;
+    background-color: var(--danger-light);
+    border: 1px solid var(--danger-border);
+    color: var(--danger);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+/* Custom Slim Scrollbars for Long Forms */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #F1F5F9;
+    border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb {
+    background: #CBD5E1;
+    border-radius: var(--radius-pill);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94A3B8;
+}
