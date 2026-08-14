@@ -85,9 +85,9 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://postgres:admin%40123@localhost:5432/medipredict_db',
+        default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
-        ssl_require=not DEBUG
+        ssl_require=False if 'sqlite' in os.environ.get('DATABASE_URL', '') or not os.environ.get('DATABASE_URL') else not DEBUG
     )
 }
 
