@@ -2,6 +2,7 @@
 django>=5.0
 requests>=2.31.0
 psycopg2-binary>=2.9.9
+gunicorn>=21.2.0
 
 # API Backend (FastAPI)
 fastapi>=0.110.0
