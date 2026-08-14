@@ -91,6 +91,12 @@ DATABASES = {
     )
 }
 
+# Ensure SQLite databases always resolve to an absolute path to prevent CWD mismatches
+if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
+    db_name = DATABASES['default']['NAME']
+    if isinstance(db_name, str) and not os.path.isabs(db_name):
+        DATABASES['default']['NAME'] = str(BASE_DIR / db_name)
+
 # Password validation
 # https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
