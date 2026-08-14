@@ -87,7 +87,7 @@ DATABASES = {
     'default': dj_database_url.config(
         default=f"sqlite:///{BASE_DIR / 'db.sqlite3'}",
         conn_max_age=600,
-        ssl_require=False if 'sqlite' in os.environ.get('DATABASE_URL', '') or not os.environ.get('DATABASE_URL') else not DEBUG
+        ssl_require=True if (os.environ.get('DATABASE_URL') and 'postgres' in os.environ.get('DATABASE_URL', '')) else False
     )
 }
 
@@ -97,8 +97,8 @@ if DATABASES['default']['ENGINE'] == 'django.db.backends.sqlite3':
     if isinstance(db_name, str) and not os.path.isabs(db_name):
         DATABASES['default']['NAME'] = str(BASE_DIR / db_name)
 
-# Vercel Serverless environment database override (use writable /tmp/ directory)
-if 'VERCEL' in os.environ:
+# Vercel Serverless environment fallback (use /tmp/db.sqlite3 ONLY if DATABASE_URL is not provided)
+if 'VERCEL' in os.environ and not os.environ.get('DATABASE_URL'):
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
