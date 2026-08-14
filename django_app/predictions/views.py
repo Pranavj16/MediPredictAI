@@ -38,9 +38,20 @@ except Exception as e:
 
 def get_prediction_result(endpoint_name, data, fallback_func):
     """
-    Attempts to call FastAPI microservice on ports 8001 or 8000.
-    Falls back to calling local ML prediction service if microservice is offline.
+    Attempts to call FastAPI microservice using FASTAPI_BACKEND_URL env var,
+    falling back to local ports 8001 or 8000, and finally to local ML models.
     """
+    import os
+    backend_url = os.environ.get("FASTAPI_BACKEND_URL")
+    if backend_url:
+        try:
+            url = f"{backend_url.rstrip('/')}/predict/{endpoint_name}"
+            res = requests.post(url, json=data, timeout=5)
+            if res.status_code == 200:
+                return res.json()
+        except Exception as err:
+            print(f"Error calling remote FastAPI backend {url}: {err}")
+
     for port in [8001, 8000]:
         try:
             url = f"http://127.0.0.1:{port}/predict/{endpoint_name}"
