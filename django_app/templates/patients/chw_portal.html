@@ -1,0 +1,194 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}MediPredictAI — {{ t.chw_portal }}{% endblock %}
+
+{% block page_title %}{{ t.chw_portal }}{% endblock %}
+
+{% block content %}
+
+<!-- Frontline Worker Welcome Banner -->
+<div class="card-premium mb-4" style="background: linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(99, 102, 241, 0.08) 100%);">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary text-white">
+                    <i class="bi bi-hospital"></i> ASHA / ANM Frontline Mode
+                </span>
+                <span class="text-muted" style="font-size: 0.8rem;">| Community Triage & Consent System</span>
+            </div>
+            <h3 class="mb-1 fw-bold text-dark tracking-tight">{{ t.chw_portal }}</h3>
+            <p class="text-secondary mb-0" style="font-size: 0.85rem;">
+                Mobile-optimized frontline portal for community patient registration, informed consent, rapid screening, and follow-up scheduling.
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'unified_screening' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-ui-checks-grid me-1"></i> Launch Rapid Screening
+            </a>
+            <a href="{% url 'hypertension_screening' %}" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-speedometer2 me-1"></i> Rapid BP Check
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Patient Registration with Consent Form -->
+    <div class="col-lg-5">
+        <div class="card-premium">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <h5 class="fw-bold text-dark mb-0">
+                    <i class="bi bi-person-plus-fill text-primary me-1"></i> New Patient Intake
+                </h5>
+                <span class="badge bg-light text-muted font-mono" style="font-size: 0.725rem;">With Consent</span>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.full_name }} *</label>
+                    {{ reg_form.full_name }}
+                </div>
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.gender }} *</label>
+                        {{ reg_form.gender }}
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.age }}</label>
+                        {{ reg_form.age }}
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.phone_number }}</label>
+                    {{ reg_form.phone_number }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size: 0.8rem;">Village / Ward / Address</label>
+                    {{ reg_form.address }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" style="font-size: 0.8rem;">Assigned PHC / Sub-Centre</label>
+                    {{ reg_form.center }}
+                </div>
+
+                <!-- Informed Consent Box -->
+                <div class="p-3 bg-light rounded-3 border mb-3">
+                    <div class="form-check">
+                        {{ reg_form.consent_given }}
+                        <label class="form-check-label fw-bold ms-1" for="id_consent_given" style="font-size: 0.8rem;">
+                            Patient Informed Consent Verified
+                        </label>
+                    </div>
+                    <div class="text-muted mt-1" style="font-size: 0.725rem;">
+                        Patient or guardian has given informed consent for non-communicable disease screening, digital records, and health follow-ups under NP-NCD protocols.
+                    </div>
+                    <div class="mt-2">
+                        {{ reg_form.consent_notes }}
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2">
+                    <i class="bi bi-person-check-fill me-1"></i> Register Patient & Generate ID
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Searchable Patients & Pending Tasks -->
+    <div class="col-lg-7">
+        <!-- Search Bar -->
+        <div class="card-premium mb-4">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <h5 class="fw-bold text-dark mb-0">Search Authorized Patient Records</h5>
+                <span class="badge bg-light text-muted font-mono" style="font-size: 0.725rem;">Role-Enforced</span>
+            </div>
+
+            <form method="GET" class="d-flex gap-2 mb-3">
+                <input type="text" name="q" class="form-control form-control-sm" placeholder="Search by name, phone, village, or ID (e.g. MP-2026-X)..." value="{{ search_query }}">
+                <button type="submit" class="btn btn-primary btn-sm px-3">
+                    <i class="bi bi-search"></i> Search
+                </button>
+                {% if search_query %}
+                    <a href="{% url 'chw_portal' %}" class="btn btn-soft-secondary btn-sm">Clear</a>
+                {% endif %}
+            </form>
+
+            {% if recent_patients %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" style="font-size: 0.825rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Patient ID</th>
+                                <th>Name</th>
+                                <th>Age/Gender</th>
+                                <th>Village/Center</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in recent_patients %}
+                                <tr>
+                                    <td><span class="badge bg-light text-primary font-mono border">{{ p.patient_identifier }}</span></td>
+                                    <td class="fw-bold text-dark">{{ p.full_name }}</td>
+                                    <td>{{ p.age|default:"-" }} y / {{ p.gender }}</td>
+                                    <td>{{ p.address|default:p.center|default:"-" }}</td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <a href="{% url 'patient_profile_detail' p.patient_identifier %}" class="btn btn-xs btn-outline-primary" title="View Profile">
+                                                <i class="bi bi-person"></i>
+                                            </a>
+                                            <a href="{% url 'health_trends_detail' p.patient_identifier %}" class="btn btn-xs btn-outline-secondary" title="View Trends">
+                                                <i class="bi bi-graph-up"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-4 text-center text-muted">
+                    No matching patients found.
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Pending Follow-ups Checklist -->
+        <div class="card-premium">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <h5 class="fw-bold text-dark mb-0">Pending Community Follow-up Tasks</h5>
+                <a href="{% url 'referrals_and_followup' %}" class="btn btn-sm btn-soft-secondary">All Tasks</a>
+            </div>
+
+            {% if pending_tasks %}
+                <div class="list-group list-group-flush">
+                    {% for t in pending_tasks %}
+                        <div class="list-group-item px-0 py-2 border-bottom">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <span class="fw-bold text-dark" style="font-size: 0.85rem;">
+                                        <i class="bi bi-clock-history text-warning me-1"></i> {{ t.get_task_type_display }}
+                                    </span>
+                                    <div class="text-muted" style="font-size: 0.75rem;">
+                                        Patient: {{ t.patient.full_name }} ({{ t.patient.address|default:t.patient.phone_number }})
+                                    </div>
+                                </div>
+                                <span class="badge bg-light text-dark font-mono border">
+                                    Due: {{ t.scheduled_date|date:"M d, Y" }}
+                                </span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="p-3 text-center text-muted" style="font-size: 0.825rem;">
+                    No pending community tasks.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

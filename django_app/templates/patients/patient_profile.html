@@ -1,0 +1,206 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}MediPredictAI — {{ t.patient_profile }}{% endblock %}
+
+{% block page_title %}{{ t.patient_profile }}{% endblock %}
+
+{% block content %}
+
+<!-- Patient Header Card -->
+<div class="card-premium mb-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div class="d-flex align-items-center gap-3">
+            <div class="avatar bg-primary text-white d-flex align-items-center justify-content-center rounded-circle shadow-sm" style="width: 56px; height: 56px; font-size: 1.5rem; font-weight: 700;">
+                {{ patient.full_name|slice:":1"|upper }}
+            </div>
+            <div>
+                <div class="d-flex align-items-center gap-2">
+                    <h3 class="mb-0 fw-bold text-dark tracking-tight">{{ patient.full_name }}</h3>
+                    <span class="badge bg-light text-primary border font-mono">{{ patient.patient_identifier }}</span>
+                </div>
+                <div class="text-secondary d-flex flex-wrap gap-3 mt-1" style="font-size: 0.825rem;">
+                    <span><i class="bi bi-gender-ambiguous me-1"></i> {{ patient.gender }}</span>
+                    {% if patient.age %}<span><i class="bi bi-calendar3 me-1"></i> {{ patient.age }} Years</span>{% endif %}
+                    {% if patient.phone_number %}<span><i class="bi bi-telephone me-1"></i> {{ patient.phone_number }}</span>{% endif %}
+                    {% if patient.center %}<span><i class="bi bi-hospital me-1"></i> {{ patient.center }}</span>{% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+            {% if patient.consent_given %}
+                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle px-3 py-2">
+                    <i class="bi bi-check-circle-fill me-1"></i> Informed Consent Active
+                </span>
+            {% endif %}
+            <a href="{% url 'unified_screening' %}" class="btn btn-primary btn-sm px-3">
+                <i class="bi bi-ui-checks-grid me-1"></i> New Screening
+            </a>
+            <a href="{% url 'health_trends' %}" class="btn btn-soft-secondary btn-sm px-3">
+                <i class="bi bi-graph-up me-1"></i> Trends
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Longitudinal Clinical Measurements Table -->
+    <div class="col-lg-7">
+        <div class="card-premium h-100">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <h5 class="fw-bold text-dark mb-0">Recorded Clinical Measurements</h5>
+                <a href="{% url 'hypertension_screening' %}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-plus-lg me-1"></i> Add Measurement
+                </a>
+            </div>
+
+            {% if measurements %}
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle" style="font-size: 0.825rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date</th>
+                                <th>Biomarker / Vital</th>
+                                <th>Value</th>
+                                <th>Source</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for m in measurements %}
+                                <tr>
+                                    <td>{{ m.measured_at|date:"M d, Y" }}</td>
+                                    <td class="fw-semibold text-dark">{{ m.get_measurement_type_display }}</td>
+                                    <td>
+                                        <span class="badge bg-light text-dark font-mono border fs-6">
+                                            {% if m.measurement_type == 'blood_pressure' and m.secondary_numeric %}
+                                                {{ m.value_numeric|floatformat:0 }}/{{ m.secondary_numeric|floatformat:0 }}
+                                            {% else %}
+                                                {{ m.value_numeric|floatformat:1 }}
+                                            {% endif %}
+                                            <span class="text-muted" style="font-size: 0.7rem;">{{ m.unit }}</span>
+                                        </span>
+                                    </td>
+                                    <td><span class="text-muted" style="font-size: 0.75rem;">{{ m.get_source_display }}</span></td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="p-4 text-center text-muted">
+                    <i class="bi bi-clipboard2-pulse fs-2 mb-2 text-secondary"></i>
+                    <p class="mb-0" style="font-size: 0.85rem;">No laboratory or vital measurements recorded yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Machine Learning Prediction Records -->
+    <div class="col-lg-5">
+        <div class="card-premium h-100">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <h5 class="fw-bold text-dark mb-0">AI Prediction History</h5>
+                <span class="badge bg-light text-muted font-mono" style="font-size: 0.725rem;">Calibrated ML</span>
+            </div>
+
+            {% if predictions %}
+                <div class="d-flex flex-column gap-3">
+                    {% for p in predictions %}
+                        <div class="p-3 rounded-3 border bg-light">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold text-dark" style="font-size: 0.85rem;">
+                                    {{ p.get_condition_display }}
+                                </span>
+                                <span class="badge {% if p.prediction == 1 %}bg-danger-subtle text-danger-emphasis border-danger-subtle{% else %}bg-success-subtle text-success-emphasis border-success-subtle{% endif %} border">
+                                    {% if p.prediction == 1 %}Elevated Risk{% else %}Low Risk{% endif %}
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between text-muted mb-2" style="font-size: 0.75rem;">
+                                <span>Risk Score: <strong>{{ p.risk_score }}%</strong></span>
+                                <span>Confidence: <strong>{{ p.confidence }}%</strong></span>
+                                <span>{{ p.created_at|date:"M d, Y" }}</span>
+                            </div>
+                            <p class="text-secondary mb-0" style="font-size: 0.75rem;">
+                                {{ p.clinical_interpretation|truncatechars:120 }}
+                            </p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="p-4 text-center text-muted">
+                    <i class="bi bi-cpu fs-2 mb-2 text-secondary"></i>
+                    <p class="mb-0" style="font-size: 0.85rem;">No AI diagnostic assessments conducted yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Active Referrals & Continuity of Care Row -->
+<div class="row g-4">
+    <div class="col-md-6">
+        <div class="card-premium h-100">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <h5 class="fw-bold text-dark mb-0">Clinical Referrals</h5>
+                <a href="{% url 'referrals_and_followup' %}" class="btn btn-sm btn-outline-primary">Manage</a>
+            </div>
+
+            {% if referrals %}
+                <div class="list-group list-group-flush">
+                    {% for ref in referrals %}
+                        <div class="list-group-item px-0 py-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-dark" style="font-size: 0.85rem;">
+                                    <i class="bi bi-hospital text-primary me-1"></i> {{ ref.referred_to_facility }}
+                                </span>
+                                <span class="badge {% if ref.status == 'completed' %}bg-success-subtle text-success-emphasis{% else %}bg-warning-subtle text-warning-emphasis{% endif %} border">
+                                    {{ ref.get_status_display }}
+                                </span>
+                            </div>
+                            <p class="text-secondary mb-0" style="font-size: 0.775rem;">
+                                {{ ref.reason }}
+                            </p>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="p-3 text-center text-muted" style="font-size: 0.825rem;">
+                    No pending medical referrals.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card-premium h-100">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <h5 class="fw-bold text-dark mb-0">Upcoming Follow-up Schedule</h5>
+                <a href="{% url 'referrals_and_followup' %}" class="btn btn-sm btn-outline-primary">Schedule</a>
+            </div>
+
+            {% if followups %}
+                <div class="list-group list-group-flush">
+                    {% for task in followups %}
+                        <div class="list-group-item px-0 py-2">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold text-dark" style="font-size: 0.85rem;">
+                                    <i class="bi bi-calendar-check text-info me-1"></i> {{ task.get_task_type_display }}
+                                </span>
+                                <span class="badge bg-light text-dark font-mono border">
+                                    {{ task.scheduled_date|date:"M d, Y" }}
+                                </span>
+                            </div>
+                            <span class="text-muted" style="font-size: 0.75rem;">Status: {{ task.get_status_display }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="p-3 text-center text-muted" style="font-size: 0.825rem;">
+                    No follow-up tasks currently scheduled.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

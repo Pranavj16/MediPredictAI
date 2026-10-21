@@ -1,0 +1,204 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}MediPredictAI — {{ t.preventive_guidance }}{% endblock %}
+
+{% block page_title %}{{ t.preventive_guidance }}{% endblock %}
+
+{% block content %}
+
+<!-- Header Banner -->
+<div class="card-premium mb-4" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(59, 130, 246, 0.05) 100%);">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle">
+                    <i class="bi bi-shield-check"></i> ICMR-NIN & AYUSH Standards
+                </span>
+                <span class="text-muted" style="font-size: 0.8rem;">| Practical Indian Lifestyle Guidance</span>
+            </div>
+            <h3 class="mb-1 fw-bold text-dark tracking-tight">{{ t.preventive_guidance }}</h3>
+            <p class="text-secondary mb-0" style="font-size: 0.85rem;">
+                Evidence-based non-pharmacological lifestyle strategies to manage diabetes risk, cardiovascular health, and blood pressure.
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <a href="{% url 'ai_assistant' %}" class="btn btn-outline-primary btn-sm">
+                <i class="bi bi-chat-quote me-1"></i> Ask AI Assistant
+            </a>
+            <a href="{% url 'unified_screening' %}" class="btn btn-primary btn-sm">
+                <i class="bi bi-ui-checks-grid me-1"></i> Check My Risks
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Personalized Guidance Alerts (if metrics are available) -->
+{% if guidance.tailored_tips %}
+    <div class="card-premium mb-4 border-warning-subtle" style="background-color: rgba(254, 243, 199, 0.4);">
+        <h5 class="fw-bold text-warning-emphasis mb-3">
+            <i class="bi bi-person-check-fill me-1"></i> Personalized Priority Insights for {{ patient.full_name }}
+        </h5>
+        <div class="d-flex flex-column gap-2 mb-0">
+            {% for tip in guidance.tailored_tips %}
+                <div class="p-3 bg-white rounded-3 border border-warning-subtle shadow-xs" style="font-size: 0.85rem;">
+                    <i class="bi bi-arrow-right-circle-fill text-warning me-2"></i> {{ tip }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endif %}
+
+<!-- Tabs / Sections for Guidance -->
+<div class="row g-4 mb-4">
+    <!-- Dietary Guidance Card -->
+    <div class="col-lg-6">
+        <div class="card-premium h-100">
+            <div class="d-flex align-items-center gap-3 mb-3 pb-2 border-bottom">
+                <span class="badge bg-success-light text-success p-2 rounded-3 fs-5">
+                    <i class="bi bi-egg-fried"></i>
+                </span>
+                <div>
+                    <h5 class="fw-bold text-dark mb-0">{{ guidance.diet.title }}</h5>
+                    <span class="text-muted" style="font-size: 0.725rem;">Affordable, regionally accessible nutrition</span>
+                </div>
+            </div>
+
+            <!-- Millets & Whole Grains -->
+            <div class="mb-3">
+                <h6 class="fw-bold text-primary mb-1" style="font-size: 0.825rem;">
+                    <i class="bi bi-check2-circle me-1"></i> Indigenous Millets & Carbohydrates:
+                </h6>
+                <ul class="text-secondary ps-3 mb-0" style="font-size: 0.8rem;">
+                    {% for item in guidance.diet.millets_whole_grains %}
+                        <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Vegetables & Greens -->
+            <div class="mb-3">
+                <h6 class="fw-bold text-primary mb-1" style="font-size: 0.825rem;">
+                    <i class="bi bi-check2-circle me-1"></i> Green Leafy Vegetables (Saag / Bhaji):
+                </h6>
+                <ul class="text-secondary ps-3 mb-0" style="font-size: 0.8rem;">
+                    {% for item in guidance.diet.vegetables_fruits %}
+                        <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Salt / Sodium Restriction -->
+            <div class="mb-3 p-3 bg-light rounded-3 border">
+                <h6 class="fw-bold text-danger mb-1" style="font-size: 0.825rem;">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> Salt (Sodium) Reduction Protocol:
+                </h6>
+                <ul class="text-secondary ps-3 mb-0" style="font-size: 0.8rem;">
+                    {% for item in guidance.diet.salt_sodium_control %}
+                        <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Healthy Cooking Oils -->
+            <div>
+                <h6 class="fw-bold text-primary mb-1" style="font-size: 0.825rem;">
+                    <i class="bi bi-check2-circle me-1"></i> Cooking Oils & Trans-Fat Elimination:
+                </h6>
+                <ul class="text-secondary ps-3 mb-0" style="font-size: 0.8rem;">
+                    {% for item in guidance.diet.healthy_fats_cooking_oils %}
+                        <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Physical Activity & Yoga Card -->
+    <div class="col-lg-6">
+        <div class="card-premium h-100">
+            <div class="d-flex align-items-center gap-3 mb-3 pb-2 border-bottom">
+                <span class="badge bg-primary-soft text-primary p-2 rounded-3 fs-5">
+                    <i class="bi bi-activity"></i>
+                </span>
+                <div>
+                    <h5 class="fw-bold text-dark mb-0">{{ guidance.exercise.title }}</h5>
+                    <span class="text-muted" style="font-size: 0.725rem;">Cardiovascular conditioning & stress control</span>
+                </div>
+            </div>
+
+            <!-- Aerobic Activity -->
+            <div class="mb-3">
+                <h6 class="fw-bold text-primary mb-1" style="font-size: 0.825rem;">
+                    <i class="bi bi-person-walking me-1"></i> Aerobic Exercise & Brisk Walking:
+                </h6>
+                <ul class="text-secondary ps-3 mb-0" style="font-size: 0.8rem;">
+                    {% for item in guidance.exercise.aerobic_exercise %}
+                        <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Yogic Asanas -->
+            <div class="mb-3">
+                <h6 class="fw-bold text-primary mb-1" style="font-size: 0.825rem;">
+                    <i class="bi bi-brightness-high me-1"></i> Yogic Asanas & Conditioning:
+                </h6>
+                <ul class="text-secondary ps-3 mb-0" style="font-size: 0.8rem;">
+                    {% for item in guidance.exercise.yoga_asanas %}
+                        <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Pranayama & Autonomic Stress -->
+            <div class="mb-3 p-3 bg-light rounded-3 border">
+                <h6 class="fw-bold text-primary mb-1" style="font-size: 0.825rem;">
+                    <i class="bi bi-wind me-1"></i> Pranayama (Breathing Exercises):
+                </h6>
+                <ul class="text-secondary ps-3 mb-0" style="font-size: 0.8rem;">
+                    {% for item in guidance.exercise.pranayama_stress %}
+                        <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Tobacco Cessation -->
+            <div>
+                <h6 class="fw-bold text-danger mb-1" style="font-size: 0.825rem;">
+                    <i class="bi bi-slash-circle me-1"></i> Tobacco & Gutka Cessation Support:
+                </h6>
+                <ul class="text-secondary ps-3 mb-0" style="font-size: 0.8rem;">
+                    {% for item in guidance.tobacco.cessation_steps %}
+                        <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Emergency Red Flags Banner -->
+<div class="card-premium mb-4 border-danger-subtle" style="background-color: rgba(254, 242, 242, 0.7);">
+    <h5 class="fw-bold text-danger mb-2">
+        <i class="bi bi-exclamation-octagon-fill me-1"></i> {{ guidance.emergency.title }}
+    </h5>
+    <p class="text-secondary mb-2" style="font-size: 0.825rem;">
+        If you or someone around you experiences any of the following symptoms, do NOT wait. Call 108 / 112 or visit the nearest emergency medical facility immediately:
+    </p>
+    <div class="row g-2">
+        {% for sign in guidance.emergency.signs %}
+            <div class="col-md-6">
+                <div class="p-2 bg-white rounded border border-danger-subtle text-danger" style="font-size: 0.8rem;">
+                    <i class="bi bi-exclamation-circle-fill me-1"></i> {{ sign }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Non-Prescription Safety Disclaimer -->
+<div class="p-3 rounded-3 bg-light border text-muted text-center" style="font-size: 0.75rem;">
+    {{ guidance.disclaimer }}
+</div>
+
+{% endblock %}

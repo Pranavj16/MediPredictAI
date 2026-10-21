@@ -1,101 +1,140 @@
 {% extends "base/dashboard_base.html" %}
 
-{% block title %}MediPredictAI — Clinical Portal Dashboard{% endblock %}
+{% block title %}MediPredictAI — {{ t.dashboard }}{% endblock %}
 
-{% block page_title %}Dashboard Overview{% endblock %}
+{% block page_title %}{{ t.dashboard }}{% endblock %}
 
 {% block content %}
 
-<!-- Clinician Welcome Banner -->
-<div class="card-premium mb-4 p-4" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.05) 0%, rgba(14, 165, 233, 0.05) 100%);">
+<!-- Clinician & User Welcome Banner -->
+<div class="card-premium mb-4 p-4" style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(14, 165, 233, 0.06) 100%);">
     <div class="row align-items-center">
         <div class="col-md-8">
             <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="badge badge-success-soft"><i class="bi bi-shield-check"></i> Session Active</span>
-                <span class="text-muted" style="font-size: 0.8rem;">| HIPAA Standard Mode</span>
+                <span class="badge badge-success-soft"><i class="bi bi-shield-check"></i> {{ t.active_session }}</span>
+                <span class="text-muted" style="font-size: 0.8rem;">| NP-NCD Prevention Framework</span>
             </div>
-            <h2 class="mb-1 text-dark fw-bold tracking-tight">Welcome back, Dr. {{ user.last_name|default:user.username }}</h2>
-            <p class="text-secondary mb-0" style="font-size: 0.9rem;">
-                All 6 clinical AI prediction classifiers are loaded into memory and ready for patient intake analysis.
+            <h2 class="mb-1 text-dark fw-bold tracking-tight">
+                Welcome back, {{ user.get_full_name|default:user.username }}
+            </h2>
+            <p class="text-secondary mb-0" style="font-size: 0.875rem;">
+                Connected AI-assisted NCD risk screening, dedicated hypertension evaluation, and continuity-of-care platform.
             </p>
         </div>
         <div class="col-md-4 text-md-end mt-3 mt-md-0">
-            <span class="badge bg-white text-dark shadow-xs border p-2 px-3 rounded-pill font-mono" style="font-size: 0.85rem;">
+            <span class="badge bg-white text-dark shadow-xs border p-2 px-3 rounded-pill font-mono" style="font-size: 0.825rem;">
                 <i class="bi bi-calendar-check text-primary me-2"></i>{% now "F j, Y" %}
             </span>
         </div>
     </div>
 </div>
 
-<!-- KPI Cards Row -->
+<!-- Primary Entry Action Banners -->
 <div class="row g-3 mb-4">
-    <!-- Stat 1 -->
+    <!-- Unified NCD Screening Hero Card -->
+    <div class="col-md-6">
+        <div class="card-premium h-100 p-4 border-primary-subtle" style="background: linear-gradient(145deg, #FFFFFF 0%, rgba(59, 130, 246, 0.04) 100%);">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <span class="badge bg-primary-soft text-primary p-3 fs-4 rounded-3">
+                    <i class="bi bi-ui-checks-grid"></i>
+                </span>
+                <span class="badge bg-primary text-white font-mono" style="font-size: 0.725rem;">Recommended Start</span>
+            </div>
+            <h4 class="fw-bold text-dark mb-2">{{ t.unified_screening }}</h4>
+            <p class="text-secondary mb-4" style="font-size: 0.85rem;">
+                Comprehensive single entry point for Diabetes, Cardiovascular Risk, and Hypertension. Evaluates lifestyle, anthropometry (Asian-Indian BMI), and dispatches models based on available clinical metrics.
+            </p>
+            <a href="{% url 'unified_screening' %}" class="btn btn-primary w-100 py-2">
+                {{ t.start_screening }} <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Dedicated Blood Pressure Card -->
+    <div class="col-md-6">
+        <div class="card-premium h-100 p-4 border-danger-subtle" style="background: linear-gradient(145deg, #FFFFFF 0%, rgba(239, 68, 68, 0.04) 100%);">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <span class="badge bg-danger-light text-danger p-3 fs-4 rounded-3">
+                    <i class="bi bi-speedometer2"></i>
+                </span>
+                <span class="badge bg-danger text-white font-mono" style="font-size: 0.725rem;">Dedicated Module</span>
+            </div>
+            <h4 class="fw-bold text-dark mb-2">{{ t.bp_screening }}</h4>
+            <p class="text-secondary mb-4" style="font-size: 0.85rem;">
+                Standardized blood pressure entry, repeat measurement verification, and clinical triage according to Indian Guidelines on Hypertension (IGH-IV) with urgent red flag guidance.
+            </p>
+            <a href="{% url 'hypertension_screening' %}" class="btn btn-outline-danger w-100 py-2">
+                {{ t.record_measurement }} <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Real Database KPI Cards Row -->
+<div class="row g-3 mb-4">
     <div class="col-xl-3 col-md-6">
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="stat-card-title">TOTAL INTAKE DIAGNOSTICS</div>
-                    <div class="stat-card-value font-mono">1,482</div>
-                    <div class="text-success fw-bold" style="font-size: 0.775rem;">
-                        <i class="bi bi-graph-up-arrow me-1"></i>+12.4% this week
+                    <div class="stat-card-title">TOTAL REGISTERED PATIENTS</div>
+                    <div class="stat-card-value font-mono">{{ total_patients }}</div>
+                    <div class="text-success fw-bold" style="font-size: 0.75rem;">
+                        <i class="bi bi-people me-1"></i>Active Records
                     </div>
                 </div>
                 <div class="stat-card-icon bg-primary-soft text-primary">
-                    <i class="bi bi-file-earmark-medical-fill"></i>
+                    <i class="bi bi-person-lines-fill"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Stat 2 -->
     <div class="col-xl-3 col-md-6">
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="stat-card-title">ACTIVE AI MODELS</div>
-                    <div class="stat-card-value font-mono text-dark">6 / 6</div>
-                    <div class="text-success fw-bold" style="font-size: 0.775rem;">
-                        <i class="bi bi-check-circle-fill me-1"></i>100% Operational
+                    <div class="stat-card-title">SCREENING SESSIONS</div>
+                    <div class="stat-card-value font-mono text-dark">{{ total_screenings }}</div>
+                    <div class="text-success fw-bold" style="font-size: 0.75rem;">
+                        <i class="bi bi-check-circle-fill me-1"></i>Triage Completed
                     </div>
                 </div>
                 <div class="stat-card-icon bg-success-light text-success">
+                    <i class="bi bi-clipboard2-pulse-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-card-title">AI INFERENCE RUNS</div>
+                    <div class="stat-card-value font-mono text-primary">{{ total_predictions }}</div>
+                    <div class="text-primary fw-bold" style="font-size: 0.75rem;">
+                        <i class="bi bi-cpu-fill me-1"></i>Explainable Output
+                    </div>
+                </div>
+                <div class="stat-card-icon bg-primary-soft text-primary">
                     <i class="bi bi-cpu-fill"></i>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Stat 3 -->
     <div class="col-xl-3 col-md-6">
         <div class="stat-card">
             <div class="d-flex justify-content-between align-items-start">
                 <div>
-                    <div class="stat-card-title">AVG MODEL ACCURACY</div>
-                    <div class="stat-card-value font-mono text-primary">94.8%</div>
-                    <div class="text-primary fw-bold" style="font-size: 0.775rem;">
-                        <i class="bi bi-award-fill me-1"></i>Calibrated Score
-                    </div>
-                </div>
-                <div class="stat-card-icon bg-primary-soft text-primary">
-                    <i class="bi bi-patch-check-fill"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Stat 4 -->
-    <div class="col-xl-3 col-md-6">
-        <div class="stat-card">
-            <div class="d-flex justify-content-between align-items-start">
-                <div>
-                    <div class="stat-card-title">FASTAPI LATENCY</div>
-                    <div class="stat-card-value font-mono text-dark">38 ms</div>
-                    <div class="text-success fw-bold" style="font-size: 0.775rem;">
-                        <i class="bi bi-lightning-charge-fill me-1"></i>Realtime Response
+                    <div class="stat-card-title">PENDING REFERRALS</div>
+                    <div class="stat-card-value font-mono text-dark">{{ pending_referrals }}</div>
+                    <div class="text-muted fw-bold" style="font-size: 0.75rem;">
+                        <i class="bi bi-arrow-repeat me-1"></i>Continuity Follow-up
                     </div>
                 </div>
                 <div class="stat-card-icon bg-warning-light text-warning">
-                    <i class="bi bi-speedometer"></i>
+                    <i class="bi bi-hospital"></i>
                 </div>
             </div>
         </div>
@@ -105,15 +144,15 @@
 <!-- Disease Models Header -->
 <div class="d-flex align-items-center justify-content-between mb-3 mt-4">
     <div>
-        <h4 class="fw-bold text-dark mb-0 tracking-tight">Disease Risk Diagnostic Suite</h4>
-        <p class="text-muted mb-0" style="font-size: 0.825rem;">Select a clinical classifier below to run an AI-assisted diagnostic evaluation.</p>
+        <h4 class="fw-bold text-dark mb-0 tracking-tight">{{ t.disease_diagnostics }}</h4>
+        <p class="text-muted mb-0" style="font-size: 0.825rem;">Individual condition prediction classifiers with transparent XAI feature attribution.</p>
     </div>
     <span class="badge bg-white border text-muted px-3 py-2 rounded-pill font-mono d-none d-md-inline" style="font-size: 0.75rem;">
-        FastAPI Microservice Ready
+        6 Classifiers Calibrated
     </span>
 </div>
 
-<!-- Disease Cards Grid -->
+<!-- Disease Cards Grid (All 6 retained) -->
 <div class="row g-4 mb-5">
     <!-- Diabetes -->
     <div class="col-lg-4 col-md-6">
@@ -121,11 +160,11 @@
             <div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <span class="badge bg-primary-soft text-primary p-2 fs-5 rounded-3"><i class="bi bi-activity"></i></span>
-                    <span class="badge badge-success-soft font-mono">96.2% Accuracy</span>
+                    <span class="badge badge-success-soft font-mono">Random Forest</span>
                 </div>
                 <h5 class="fw-bold text-dark">Diabetes Risk</h5>
                 <p class="text-secondary" style="font-size: 0.85rem;">
-                    Predict patient glycemic risk based on glucose levels, HbA1c, BMI, age, and smoking history.
+                    Predict glycemic risk based on glucose levels, HbA1c, BMI, age, and smoking history with XAI feature contributions.
                 </p>
             </div>
             <a href="{% url 'diabetes_prediction' %}" class="btn btn-primary w-100">
@@ -140,7 +179,7 @@
             <div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <span class="badge bg-danger-light text-danger p-2 fs-5 rounded-3"><i class="bi bi-heart-pulse-fill"></i></span>
-                    <span class="badge badge-success-soft font-mono">95.8% Accuracy</span>
+                    <span class="badge badge-success-soft font-mono">K-Nearest Neighbors</span>
                 </div>
                 <h5 class="fw-bold text-dark">Heart Disease Analysis</h5>
                 <p class="text-secondary" style="font-size: 0.85rem;">
@@ -159,11 +198,11 @@
             <div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <span class="badge bg-info-light text-info p-2 fs-5 rounded-3" style="background-color: rgba(14, 165, 233, 0.1);"><i class="bi bi-lungs-fill"></i></span>
-                    <span class="badge badge-success-soft font-mono">94.5% Accuracy</span>
+                    <span class="badge badge-success-soft font-mono">Random Forest</span>
                 </div>
                 <h5 class="fw-bold text-dark">Kidney Diagnostics</h5>
                 <p class="text-secondary" style="font-size: 0.85rem;">
-                    Assess renal filtration indices, specific gravity, albumin, serum creatinine, and cell counts.
+                    Assess renal filtration indices, specific gravity, urine albumin, serum creatinine, and cell counts.
                 </p>
             </div>
             <a href="{% url 'kidney_prediction' %}" class="btn btn-primary w-100">
@@ -178,11 +217,11 @@
             <div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <span class="badge badge-warning-soft p-2 fs-5 rounded-3"><i class="bi bi-capsule"></i></span>
-                    <span class="badge badge-success-soft font-mono">94.8% Accuracy</span>
+                    <span class="badge badge-success-soft font-mono">Logistic Regression</span>
                 </div>
                 <h5 class="fw-bold text-dark">Liver Screening</h5>
                 <p class="text-secondary" style="font-size: 0.85rem;">
-                    Analyze hepatic enzymes, total/direct bilirubin levels, SGPT/SGOT, and protein AG ratios.
+                    Analyze hepatic enzymes, bilirubin levels, SGPT/SGOT, and protein AG ratios (ILPD Indian cohort).
                 </p>
             </div>
             <a href="{% url 'liver_prediction' %}" class="btn btn-primary w-100">
@@ -197,7 +236,7 @@
             <div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <span class="badge p-2 fs-5 rounded-3" style="background-color: rgba(139, 92, 246, 0.1); color: #8B5CF6;"><i class="bi bi-soundwave"></i></span>
-                    <span class="badge badge-success-soft font-mono">94.9% Accuracy</span>
+                    <span class="badge badge-success-soft font-mono">Random Forest</span>
                 </div>
                 <h5 class="fw-bold text-dark">Parkinson Voice</h5>
                 <p class="text-secondary" style="font-size: 0.85rem;">
@@ -216,7 +255,7 @@
             <div>
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <span class="badge bg-danger-light text-danger p-2 fs-5 rounded-3"><i class="bi bi-lightning-charge-fill"></i></span>
-                    <span class="badge badge-success-soft font-mono">95.4% Accuracy</span>
+                    <span class="badge badge-success-soft font-mono">Logistic Regression</span>
                 </div>
                 <h5 class="fw-bold text-dark">Stroke Assessment</h5>
                 <p class="text-secondary" style="font-size: 0.85rem;">

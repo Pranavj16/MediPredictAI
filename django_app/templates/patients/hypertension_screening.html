@@ -1,0 +1,263 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}MediPredictAI — {{ t.bp_screening }}{% endblock %}
+
+{% block page_title %}{{ t.bp_screening }}{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <!-- BP Entry Form Column -->
+    <div class="col-lg-6">
+        <div class="card-premium">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-danger-light text-danger p-2 fs-5 rounded-3">
+                        <i class="bi bi-speedometer2"></i>
+                    </span>
+                    <div>
+                        <h4 class="mb-0 fw-bold text-dark tracking-tight">{{ t.bp_screening }}</h4>
+                        <p class="text-secondary mb-0" style="font-size: 0.8rem;">
+                            Dedicated clinical evaluation based on Indian Guidelines on Hypertension (IGH-IV).
+                        </p>
+                    </div>
+                </div>
+                <span class="badge bg-light text-muted font-mono" style="font-size: 0.725rem;">IGH-IV / AHA</span>
+            </div>
+
+            <!-- Quick Presets -->
+            <div class="preset-bar mb-3 p-2 rounded-3 bg-light border">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <span class="fw-semibold text-dark" style="font-size: 0.775rem;">
+                        <i class="bi bi-magic text-primary me-1"></i> Quick Presets:
+                    </span>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-success btn-sm py-1" onclick="setBP(116, 76, true)" style="font-size: 0.75rem;">
+                            Normal (116/76)
+                        </button>
+                        <button type="button" class="btn btn-outline-warning btn-sm py-1" onclick="setBP(134, 86, false)" style="font-size: 0.75rem;">
+                            Stage 1 (134/86)
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm py-1" onclick="setBP(156, 98, false)" style="font-size: 0.75rem;">
+                            Stage 2 (156/98)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-dark" style="font-size: 0.85rem;">
+                            {{ t.systolic_bp }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.systolic }}
+                        <div class="text-muted" style="font-size: 0.725rem;">Optimal: &lt; 120 mmHg</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold text-dark" style="font-size: 0.85rem;">
+                            {{ t.diastolic_bp }} <span class="text-danger">*</span>
+                        </label>
+                        {{ form.diastolic }}
+                        <div class="text-muted" style="font-size: 0.725rem;">Optimal: &lt; 80 mmHg</div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.measurement_context }}</label>
+                        {{ form.context }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.measurement_source }}</label>
+                        {{ form.source }}
+                    </div>
+                </div>
+
+                <div class="form-check p-3 bg-light rounded-3 border mb-3 ms-0">
+                    {{ form.is_repeated }}
+                    <label class="form-check-label ms-2 fw-semibold" for="id_is_repeated" style="font-size: 0.8rem;">
+                        {{ t.was_repeated }}
+                    </label>
+                    <div class="text-muted ms-4" style="font-size: 0.725rem;">
+                        Checking this indicates you took an initial reading, rested for 5 minutes, and repeated the measurement.
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-semibold" style="font-size: 0.8rem;">Clinical Observations / Notes (Optional)</label>
+                    {{ form.notes }}
+                </div>
+
+                <div class="d-flex gap-3 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary px-4 py-2">
+                        <i class="bi bi-clipboard2-pulse-fill me-1"></i> Record & Evaluate Blood Pressure
+                    </button>
+                    <a href="{% url 'hypertension_screening' %}" class="btn btn-soft-secondary py-2">
+                        <i class="bi bi-arrow-counterclockwise"></i> {{ t.reset_form }}
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BP Result & History Column -->
+    <div class="col-lg-6">
+        {% if evaluation and evaluation.valid %}
+            <div class="card-premium h-100">
+                <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-{{ evaluation.badge }}-subtle text-{{ evaluation.badge }}-emphasis p-2 rounded-3 fs-5 border">
+                            <i class="bi bi-speedometer2"></i>
+                        </span>
+                        <div>
+                            <h4 class="mb-0 fw-bold text-dark tracking-tight">Blood Pressure Clinical Triage</h4>
+                            <span class="text-muted" style="font-size: 0.75rem;">Evaluation against IGH-IV reference thresholds</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Big Metric Display -->
+                <div class="p-4 rounded-3 text-center mb-4 border bg-{{ evaluation.badge }}-subtle text-{{ evaluation.badge }}-emphasis border-{{ evaluation.badge }}-subtle">
+                    <div class="text-uppercase fw-bold mb-1" style="font-size: 0.75rem; letter-spacing: 0.05em;">
+                        RECORDED MEASUREMENT
+                    </div>
+                    <h1 class="display-4 fw-extrabold font-mono mb-1">
+                        {{ evaluation.systolic }} / {{ evaluation.diastolic }}
+                        <span class="fs-5 fw-normal text-muted">mmHg</span>
+                    </h1>
+                    <div class="badge bg-white text-dark shadow-xs border px-3 py-2 fs-6 mt-1">
+                        {{ evaluation.category }}
+                    </div>
+                </div>
+
+                <!-- Urgent Emergency Notice if Crisis -->
+                {% if evaluation.urgency == 'urgent_emergency' %}
+                    <div class="alert alert-danger p-3 rounded-3 mb-4 shadow-xs" role="alert">
+                        <h6 class="fw-bold mb-1 text-danger">
+                            <i class="bi bi-exclamation-octagon-fill me-1"></i> URGENT CLINICAL ALERT: Hypertensive Emergency
+                        </h6>
+                        <p class="mb-2" style="font-size: 0.8rem;">
+                            {{ evaluation.notes }}
+                        </p>
+                        <div class="p-2 bg-white rounded border border-danger-subtle text-danger fw-semibold" style="font-size: 0.775rem;">
+                            Emergency Helpline: Dial 108 or 112 immediately for emergency medical ambulance transfer.
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Clinical Guidance Box -->
+                <div class="p-3 bg-light rounded-3 border mb-4">
+                    <h6 class="fw-bold text-dark mb-2" style="font-size: 0.85rem;">
+                        <i class="bi bi-clipboard2-check me-1 text-primary"></i> Recommended Clinical Action:
+                    </h6>
+                    <p class="text-secondary mb-2" style="font-size: 0.8rem;">
+                        {{ evaluation.action }}
+                    </p>
+                    <p class="text-muted mb-0" style="font-size: 0.775rem;">
+                        {{ evaluation.notes }}
+                    </p>
+                </div>
+
+                {% if evaluation.repeat_needed %}
+                    <div class="alert alert-warning py-2 px-3 rounded-3 mb-4" style="font-size: 0.775rem;">
+                        <i class="bi bi-arrow-repeat me-1"></i>
+                        <strong>Repeat Reading Protocol:</strong> Sit quietly for 5 minutes without speaking or mobile phone use, then record a repeat measurement.
+                    </div>
+                {% endif %}
+
+                <!-- Referral & Follow-up Actions -->
+                <div class="d-flex gap-2 flex-wrap mb-4">
+                    <a href="{% url 'referrals_and_followup' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-arrow-up-right-circle me-1"></i> Create Clinic Referral
+                    </a>
+                    <a href="{% url 'preventive_guidance' %}" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-heart-pulse me-1"></i> View Dietary Salt & Lifestyle Advice
+                    </a>
+                </div>
+
+                <!-- Confirmatory Disclaimer -->
+                <div class="p-2 rounded bg-light border text-muted text-center" style="font-size: 0.7rem;">
+                    {{ t.confirmatory_note }} {{ t.medical_disclaimer }}
+                </div>
+            </div>
+        {% else %}
+            <!-- History / Empty State Column -->
+            <div class="card-premium h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom">
+                    <h5 class="fw-bold text-dark mb-0 tracking-tight">Recent Blood Pressure History</h5>
+                    <a href="{% url 'health_trends' %}" class="btn btn-sm btn-soft-secondary">
+                        <i class="bi bi-graph-up me-1"></i> View Trends
+                    </a>
+                </div>
+
+                {% if bp_history %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle" style="font-size: 0.825rem;">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Reading</th>
+                                    <th>Context</th>
+                                    <th>Source</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for bp in bp_history %}
+                                    <tr>
+                                        <td>{{ bp.measured_at|date:"M d, Y" }}</td>
+                                        <td>
+                                            <span class="fw-bold font-mono">{{ bp.value_numeric|floatformat:0 }}/{{ bp.secondary_numeric|floatformat:0 }}</span>
+                                            <span class="text-muted" style="font-size: 0.7rem;">mmHg</span>
+                                        </td>
+                                        <td>{{ bp.get_context_display }}</td>
+                                        <td><span class="badge bg-light text-muted border">{{ bp.get_source_display }}</span></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="p-5 text-center text-muted">
+                        <i class="bi bi-speedometer fs-1 text-secondary opacity-50 mb-2"></i>
+                        <p class="mb-0" style="font-size: 0.85rem;">No previous blood pressure readings recorded for this account.</p>
+                        <p class="text-secondary" style="font-size: 0.775rem;">Enter your first systolic and diastolic reading on the left to start tracking.</p>
+                    </div>
+                {% endif %}
+
+                <!-- Standard Reference Table -->
+                <div class="mt-auto pt-3 border-top">
+                    <h6 class="fw-bold text-secondary mb-2" style="font-size: 0.75rem; text-transform: uppercase;">
+                        Clinical Reference Ranges (IGH-IV / ICMR):
+                    </h6>
+                    <div class="row g-2 text-center" style="font-size: 0.725rem;">
+                        <div class="col-3 p-1 rounded bg-success-subtle text-success-emphasis border border-success-subtle">
+                            &lt;120 / &lt;80<br><strong>Normal</strong>
+                        </div>
+                        <div class="col-3 p-1 rounded bg-info-subtle text-info-emphasis border border-info-subtle">
+                            120-129 / &lt;80<br><strong>Elevated</strong>
+                        </div>
+                        <div class="col-3 p-1 rounded bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                            130-139 / 80-89<br><strong>Stage 1</strong>
+                        </div>
+                        <div class="col-3 p-1 rounded bg-danger-subtle text-danger-emphasis border border-danger-subtle">
+                            &gt;=140 / &gt;=90<br><strong>Stage 2</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function setBP(sys, dia, rep) {
+        document.getElementById("id_systolic").value = sys;
+        document.getElementById("id_diastolic").value = dia;
+        document.getElementById("id_is_repeated").checked = rep;
+    }
+</script>
+
+{% endblock %}

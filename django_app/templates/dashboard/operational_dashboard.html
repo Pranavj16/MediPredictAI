@@ -1,0 +1,201 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}MediPredictAI — {{ t.aggregated_dashboard }}{% endblock %}
+
+{% block page_title %}{{ t.aggregated_dashboard }}{% endblock %}
+
+{% block content %}
+
+<!-- Header Banner -->
+<div class="card-premium mb-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                    <i class="bi bi-bar-chart-line-fill"></i> Operational Health Telemetry
+                </span>
+                <span class="text-muted" style="font-size: 0.8rem;">| De-identified Aggregate Reporting</span>
+            </div>
+            <h3 class="mb-1 fw-bold text-dark tracking-tight">{{ t.aggregated_dashboard }}</h3>
+            <p class="text-secondary mb-0" style="font-size: 0.85rem;">
+                Live operational indicators and screening completion ratios based on actual database entries.
+            </p>
+        </div>
+        <div>
+            <span class="badge bg-light text-muted border p-2 font-mono">
+                <i class="bi bi-clock-history me-1"></i> Updated in Real-Time
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- Primary KPI Cards Row -->
+<div class="row g-3 mb-4">
+    <!-- Total Screened -->
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-card-title">TOTAL REGISTERED PATIENTS</div>
+                    <div class="stat-card-value font-mono">{{ total_screened }}</div>
+                    <div class="text-muted" style="font-size: 0.75rem;">
+                        Verified informed consent
+                    </div>
+                </div>
+                <div class="stat-card-icon bg-primary-soft text-primary">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Screenings Completed -->
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-card-title">TOTAL SCREENING SESSIONS</div>
+                    <div class="stat-card-value font-mono text-dark">{{ sessions_total }}</div>
+                    <div class="text-success fw-bold" style="font-size: 0.75rem;">
+                        <i class="bi bi-check2-all me-1"></i>{{ completed_screenings }} completed triage
+                    </div>
+                </div>
+                <div class="stat-card-icon bg-success-light text-success">
+                    <i class="bi bi-clipboard2-check-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Referral Completion Rate -->
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-card-title">REFERRAL COMPLETION RATE</div>
+                    <div class="stat-card-value font-mono text-primary">{{ referral_completion_rate }}%</div>
+                    <div class="text-muted" style="font-size: 0.725rem;">
+                        {{ completed_referrals }} / {{ total_referrals }} referrals closed
+                    </div>
+                </div>
+                <div class="stat-card-icon bg-primary-soft text-primary">
+                    <i class="bi bi-hospital-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Follow-up Completion Rate -->
+    <div class="col-xl-3 col-md-6">
+        <div class="stat-card">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="stat-card-title">FOLLOW-UP ADHERENCE RATE</div>
+                    <div class="stat-card-value font-mono text-dark">{{ followup_completion_rate }}%</div>
+                    <div class="text-muted" style="font-size: 0.725rem;">
+                        {{ completed_tasks }} / {{ total_tasks }} tasks resolved
+                    </div>
+                </div>
+                <div class="stat-card-icon bg-warning-light text-warning">
+                    <i class="bi bi-calendar2-check-fill"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Triage Workflow Ratios -->
+    <div class="col-lg-6">
+        <div class="card-premium h-100">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <h5 class="fw-bold text-dark mb-0">Screening Progression Breakdown</h5>
+                <span class="badge bg-light text-muted font-mono" style="font-size: 0.725rem;">Defined Denominators</span>
+            </div>
+
+            <div class="mb-4">
+                <div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
+                    <span class="fw-semibold">Routine Follow-up (Low Risk)</span>
+                    <span class="font-mono fw-bold">{{ completed_screenings }} ({{ completed_screenings|default:0 }}/{{ sessions_total|default:1 }})</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-success" role="progressbar" style="width: {% widthratio completed_screenings sessions_total|default:1 100 %}%;"></div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
+                    <span class="fw-semibold">Assessment / Referral Recommended</span>
+                    <span class="font-mono fw-bold text-warning">{{ requiring_followup }} ({{ requiring_followup }}/{{ sessions_total|default:1 }})</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-warning" role="progressbar" style="width: {% widthratio requiring_followup sessions_total|default:1 100 %}%;"></div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
+                    <span class="fw-semibold">Incomplete Screening / Missing Labs</span>
+                    <span class="font-mono fw-bold text-danger">{{ incomplete_screenings }} ({{ incomplete_screenings }}/{{ sessions_total|default:1 }})</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-danger" role="progressbar" style="width: {% widthratio incomplete_screenings sessions_total|default:1 100 %}%;"></div>
+                </div>
+            </div>
+
+            <div class="p-3 bg-light rounded-3 border text-muted mt-auto" style="font-size: 0.75rem;">
+                <i class="bi bi-info-circle me-1"></i> Ratios represent workflow status of screened individuals. They do not represent final hospital clinical diagnoses.
+            </div>
+        </div>
+    </div>
+
+    <!-- Missing Measurements Frequency Card -->
+    <div class="col-lg-6">
+        <div class="card-premium h-100">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <h5 class="fw-bold text-dark mb-0">Missing Measurement Frequency</h5>
+                <span class="badge bg-light text-muted font-mono" style="font-size: 0.725rem;">Diagnostics Gap</span>
+            </div>
+
+            <p class="text-secondary" style="font-size: 0.825rem;">
+                Identifies which clinical vitals or laboratory tests are most commonly missing across registered patient profiles, highlighting community screening priorities:
+            </p>
+
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
+                    <span class="fw-semibold"><i class="bi bi-droplet-half text-danger me-1"></i> Glycemic Lab Gap (Fasting Glucose / HbA1c missing)</span>
+                    <span class="font-mono fw-bold text-danger">{{ pct_missing_glucose }}%</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-danger" role="progressbar" style="width: {{ pct_missing_glucose }}%;"></div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
+                    <span class="fw-semibold"><i class="bi bi-speedometer2 text-warning me-1"></i> Blood Pressure Gap (Missing BP measurement)</span>
+                    <span class="font-mono fw-bold text-warning">{{ pct_missing_bp }}%</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-warning" role="progressbar" style="width: {{ pct_missing_bp }}%;"></div>
+                </div>
+            </div>
+
+            <div class="mb-4">
+                <div class="d-flex justify-content-between mb-1" style="font-size: 0.8rem;">
+                    <span class="fw-semibold"><i class="bi bi-rulers text-primary me-1"></i> Anthropometry Gap (Height/Weight missing)</span>
+                    <span class="font-mono fw-bold text-primary">{{ pct_missing_bmi }}%</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: {{ pct_missing_bmi }}%;"></div>
+                </div>
+            </div>
+
+            <div class="p-3 bg-light rounded-3 border text-muted" style="font-size: 0.75rem;">
+                <i class="bi bi-shield-lock me-1"></i> Privacy Notice: All statistics on this operational dashboard are strictly aggregated and contain zero personally identifiable patient records.
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

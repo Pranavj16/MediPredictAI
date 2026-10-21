@@ -1,0 +1,153 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}MediPredictAI — {{ t.ai_assistant }}{% endblock %}
+
+{% block page_title %}{{ t.ai_assistant }}{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <!-- Chat / Question Column -->
+    <div class="col-lg-8">
+        <div class="card-premium h-100 d-flex flex-column">
+            <!-- Header -->
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-primary-soft text-primary p-2 fs-5 rounded-3">
+                        <i class="bi bi-chat-quote-fill"></i>
+                    </span>
+                    <div>
+                        <h4 class="mb-0 fw-bold text-dark tracking-tight">{{ t.ai_assistant }}</h4>
+                        <p class="text-secondary mb-0" style="font-size: 0.8rem;">
+                            Medically grounded educational assistant powered by ICMR & WHO-SEARO public health guidelines.
+                        </p>
+                    </div>
+                </div>
+                <span class="badge badge-success-soft font-mono">Grounded RAG</span>
+            </div>
+
+            <!-- Suggested Topics Pills -->
+            <div class="mb-3">
+                <span class="fw-semibold text-muted mb-2 d-block" style="font-size: 0.75rem;">Common Topics:</span>
+                <div class="d-flex flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm py-1 rounded-pill" onclick="setQuery('What are normal fasting blood glucose and HbA1c levels?')">
+                        <i class="bi bi-activity text-primary me-1"></i> Normal Blood Glucose
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm py-1 rounded-pill" onclick="setQuery('How to prepare for blood pressure screening?')">
+                        <i class="bi bi-speedometer2 text-danger me-1"></i> BP Preparation
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm py-1 rounded-pill" onclick="setQuery('How can I reduce daily salt intake with Indian foods?')">
+                        <i class="bi bi-egg-fried text-success me-1"></i> Salt Reduction in Diet
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm py-1 rounded-pill" onclick="setQuery('What are the FAST stroke warning symptoms?')">
+                        <i class="bi bi-exclamation-octagon text-danger me-1"></i> FAST Stroke Signs
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm py-1 rounded-pill" onclick="setQuery('How should I prepare for my doctor appointment?')">
+                        <i class="bi bi-hospital text-info me-1"></i> Doctor Visit Prep
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dialogue / Response Area -->
+            <div class="flex-grow-1 p-3 rounded-3 bg-light border mb-3 overflow-auto" id="chatArea" style="min-height: 280px; max-height: 440px;">
+                <!-- Initial Welcome Message -->
+                <div class="d-flex gap-2 mb-3">
+                    <div class="avatar bg-primary text-white d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                        <i class="bi bi-robot"></i>
+                    </div>
+                    <div class="p-3 bg-white rounded-3 shadow-xs border" style="max-width: 85%; font-size: 0.825rem;">
+                        <div class="fw-bold text-primary mb-1">MediPredict Health Educator</div>
+                        <p class="mb-0 text-secondary">
+                            Namaste! I am here to help explain your screening results, normal laboratory reference ranges, preventive diet/exercise, and how to prepare for your medical consultations. All responses are grounded in approved ICMR, WHO, and National Health Mission publications.
+                        </p>
+                    </div>
+                </div>
+
+                {% if response_data %}
+                    <!-- User Message -->
+                    <div class="d-flex justify-content-end mb-3">
+                        <div class="p-3 bg-primary text-white rounded-3 shadow-xs" style="max-width: 80%; font-size: 0.825rem;">
+                            {{ query }}
+                        </div>
+                    </div>
+
+                    <!-- Assistant Response -->
+                    <div class="d-flex gap-2 mb-3">
+                        <div class="avatar bg-primary text-white d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                            <i class="bi bi-robot"></i>
+                        </div>
+                        <div class="p-3 bg-white rounded-3 shadow-xs border" style="max-width: 88%; font-size: 0.825rem;">
+                            <div class="fw-bold text-primary mb-1">MediPredict Health Educator</div>
+                            <p class="mb-3 text-secondary" style="white-space: pre-line;">
+                                {{ response_data.answer }}
+                            </p>
+
+                            {% if response_data.sources %}
+                                <div class="pt-2 border-top">
+                                    <span class="fw-semibold text-muted d-block mb-1" style="font-size: 0.7rem; text-transform: uppercase;">
+                                        <i class="bi bi-journal-bookmark-fill text-primary me-1"></i> Verified Literature Sources:
+                                    </span>
+                                    <ul class="mb-0 ps-3 text-muted" style="font-size: 0.725rem;">
+                                        {% for s in response_data.sources %}
+                                            <li>{{ s }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Input Form -->
+            <form method="POST" id="assistantForm" class="d-flex gap-2">
+                {% csrf_token %}
+                <input type="text" name="query" id="userQueryInput" class="form-control" placeholder="Ask about health measurements, screening, diet, or doctor visits..." required value="{{ query }}">
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Safety Guardrails & Guidelines Column -->
+    <div class="col-lg-4">
+        <div class="card-premium h-100">
+            <h5 class="fw-bold text-dark mb-3 pb-2 border-bottom">
+                <i class="bi bi-shield-check text-success me-1"></i> Safety Guardrails
+            </h5>
+
+            <div class="p-3 bg-light rounded-3 border mb-3">
+                <h6 class="fw-bold text-dark mb-1" style="font-size: 0.825rem;">What I Can Do:</h6>
+                <ul class="text-secondary ps-3 mb-0" style="font-size: 0.775rem;">
+                    <li>Explain clinical metrics (Blood Pressure, Glucose, HbA1c, BMI).</li>
+                    <li>Guide preparation for medical appointments and lab blood tests.</li>
+                    <li>Provide ICMR-NIN evidence-based dietary recommendations.</li>
+                    <li>Help you understand the next steps suggested by screening.</li>
+                </ul>
+            </div>
+
+            <div class="p-3 bg-light rounded-3 border mb-3">
+                <h6 class="fw-bold text-danger mb-1" style="font-size: 0.825rem;">What I Cannot Do:</h6>
+                <ul class="text-secondary ps-3 mb-0" style="font-size: 0.775rem;">
+                    <li>Diagnose medical conditions independently.</li>
+                    <li>Prescribe, adjust, or discontinue medications.</li>
+                    <li>Replace an in-person physical consultation with a licensed physician.</li>
+                </ul>
+            </div>
+
+            <div class="p-3 bg-light rounded-3 border text-muted" style="font-size: 0.725rem;">
+                <strong>Emergency Helpline:</strong> If you experience severe chest pain, sudden paralysis, or severe breathlessness, immediately dial <strong>108</strong> or <strong>112</strong>.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function setQuery(q) {
+        document.getElementById("userQueryInput").value = q;
+        document.getElementById("assistantForm").submit();
+    }
+</script>
+
+{% endblock %}

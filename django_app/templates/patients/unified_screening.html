@@ -1,0 +1,441 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}MediPredictAI — {{ t.unified_screening }}{% endblock %}
+
+{% block page_title %}{{ t.unified_screening }}{% endblock %}
+
+{% block content %}
+
+<div class="row g-4">
+    <!-- Screening Form Column -->
+    <div class="col-lg-6">
+        <div class="card-premium">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom">
+                <div class="d-flex align-items-center gap-3">
+                    <span class="badge bg-primary-soft text-primary p-2 fs-5 rounded-3">
+                        <i class="bi bi-ui-checks-grid"></i>
+                    </span>
+                    <div>
+                        <h4 class="mb-0 fw-bold text-dark tracking-tight">{{ t.unified_screening }}</h4>
+                        <p class="text-secondary mb-0" style="font-size: 0.8rem;">
+                            Step-by-step evaluation for Diabetes, Cardiovascular Risk, and Hypertension.
+                        </p>
+                    </div>
+                </div>
+                <span class="badge bg-light text-muted font-mono" style="font-size: 0.725rem;">NP-NCD Protocol</span>
+            </div>
+
+            <!-- Demo Presets Bar -->
+            <div class="preset-bar mb-3 p-2 rounded-3 bg-light border">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <span class="fw-semibold text-dark" style="font-size: 0.775rem;">
+                        <i class="bi bi-magic text-primary me-1"></i> Quick Presets:
+                    </span>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-success btn-sm py-1" onclick="fillNormalPreset()" style="font-size: 0.75rem;">
+                            <i class="bi bi-check2-circle"></i> Low Risk Normal
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm py-1" onclick="fillElevatedPreset()" style="font-size: 0.75rem;">
+                            <i class="bi bi-exclamation-triangle"></i> Elevated Metabolic
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Offline / Low-Bandwidth Draft Notice -->
+            <div id="draftNotice" class="alert alert-info py-2 px-3 rounded-3 d-none mb-3" style="font-size: 0.775rem;">
+                <i class="bi bi-save2 me-1"></i> Restored saved draft from local storage.
+            </div>
+
+            <form method="POST" id="unifiedScreeningForm">
+                {% csrf_token %}
+
+                <!-- Section 1: Demographics -->
+                <div class="mb-4">
+                    <h6 class="fw-bold text-primary mb-3 pb-1 border-bottom" style="font-size: 0.85rem;">
+                        <i class="bi bi-person-badge me-1"></i> 1. Demographic Profile
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.full_name }}</label>
+                            {{ form.full_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.age }} <span class="text-danger">*</span></label>
+                            {{ form.age }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.gender }} <span class="text-danger">*</span></label>
+                            {{ form.gender }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 2: Anthropometry -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-1 border-bottom">
+                        <h6 class="fw-bold text-primary mb-0" style="font-size: 0.85rem;">
+                            <i class="bi bi-rulers me-1"></i> 2. Body Measurements (Anthropometry)
+                        </h6>
+                        <span class="text-muted" style="font-size: 0.725rem;">BMI calculated if provided</span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.height_cm }}</label>
+                            {{ form.height_cm }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.weight_kg }}</label>
+                            {{ form.weight_kg }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold" style="font-size: 0.8rem;">Waist (cm)</label>
+                            {{ form.waist_cm }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Lifestyle & History -->
+                <div class="mb-4">
+                    <h6 class="fw-bold text-primary mb-3 pb-1 border-bottom" style="font-size: 0.85rem;">
+                        <i class="bi bi-heart-pulse me-1"></i> 3. Lifestyle & Family History
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.physical_activity }}</label>
+                            {{ form.physical_activity }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.tobacco_use }}</label>
+                            {{ form.tobacco_status }}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.family_history }}</label>
+                            {{ form.family_history_diabetes }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" style="font-size: 0.8rem;">Previous Hypertension Diagnosis</label>
+                            {{ form.known_hypertension }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" style="font-size: 0.8rem;">Previous Cardiovascular Disease</label>
+                            {{ form.known_heart_disease }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 4: Optional Clinical Vitals -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-1 border-bottom">
+                        <h6 class="fw-bold text-primary mb-0" style="font-size: 0.85rem;">
+                            <i class="bi bi-hospital me-1"></i> 4. Clinical Measurements (Optional)
+                        </h6>
+                        <span class="badge bg-light text-secondary border font-mono" style="font-size: 0.7rem;">Enter only if tested</span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.systolic_bp }}</label>
+                            {{ form.systolic_bp }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.diastolic_bp }}</label>
+                            {{ form.diastolic_bp }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.fasting_glucose }}</label>
+                            {{ form.fasting_glucose }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold" style="font-size: 0.8rem;">{{ t.hba1c }}</label>
+                            {{ form.hba1c }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3 pt-3 border-top">
+                    <button type="submit" class="btn btn-primary px-4 py-2">
+                        <i class="bi bi-cpu-fill me-1"></i> Evaluate Comprehensive Triage
+                    </button>
+                    <a href="{% url 'unified_screening' %}" class="btn btn-soft-secondary py-2" onclick="localStorage.removeItem('mp_screening_draft')">
+                        <i class="bi bi-arrow-counterclockwise"></i> {{ t.reset_form }}
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Results & Screening Summary Column -->
+    <div class="col-lg-6">
+        {% if result_summary %}
+            <div class="card-premium h-100">
+                <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom">
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-success-light text-success p-2 rounded-3 fs-5">
+                            <i class="bi bi-clipboard2-check-fill"></i>
+                        </span>
+                        <div>
+                            <h4 class="mb-0 fw-bold text-dark tracking-tight">NCD Screening Triage Summary</h4>
+                            <span class="text-muted" style="font-size: 0.75rem;">
+                                Assessed on {{ result_summary.date|date:"F j, Y, g:i a" }}
+                            </span>
+                        </div>
+                    </div>
+                    {% if result_summary.session %}
+                        <a href="{% url 'printable_summary' result_summary.session.id %}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-printer me-1"></i> {{ t.print_summary }}
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Overall Triage Status Banner -->
+                <div class="p-3 rounded-3 mb-4 border {% if result_summary.status == 'routine_followup' %}bg-success-subtle text-success-emphasis border-success-subtle{% elif result_summary.status == 'assessment_recommended' %}bg-warning-subtle text-warning-emphasis border-warning-subtle{% else %}bg-danger-subtle text-danger-emphasis border-danger-subtle{% endif %}">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="fw-bold" style="font-size: 0.9rem;">
+                                <i class="bi bi-shield-fill-exclamation me-1"></i>
+                                Triage Status: 
+                                {% if result_summary.status == 'routine_followup' %}
+                                    Routine Preventive Follow-up
+                                {% elif result_summary.status == 'assessment_recommended' %}
+                                    Further Clinical Assessment Recommended
+                                {% else %}
+                                    Immediate Medical Review Required
+                                {% endif %}
+                            </div>
+                            <div style="font-size: 0.775rem;">
+                                {% if result_summary.risk_flags %}
+                                    Identified risk markers: {{ result_summary.risk_flags|join:", " }}
+                                {% else %}
+                                    No immediate high-risk clinical triggers detected.
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accordion / Grid of Completed Assessments -->
+                <h6 class="fw-bold text-dark mb-2" style="font-size: 0.85rem;">Completed Screening Modules:</h6>
+
+                <div class="list-group mb-4 shadow-xs">
+                    <!-- BMI Module -->
+                    <div class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-dark" style="font-size: 0.85rem;">
+                                <i class="bi bi-rulers text-primary me-1"></i> Asian-Indian BMI Classification
+                            </span>
+                            {% if result_summary.bmi_data %}
+                                <span class="badge bg-{{ result_summary.bmi_data.badge }}-subtle text-{{ result_summary.bmi_data.badge }}-emphasis border">
+                                    {{ result_summary.bmi_data.bmi }} kg/m² ({{ result_summary.bmi_data.category }})
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-muted">Measurement Not Provided</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-secondary mb-0" style="font-size: 0.775rem;">
+                            {% if result_summary.bmi_data %}
+                                {{ result_summary.bmi_data.advice }}
+                            {% else %}
+                                Height and weight were not entered. BMI was not evaluated.
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <!-- Hypertension Module -->
+                    <div class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-dark" style="font-size: 0.85rem;">
+                                <i class="bi bi-speedometer2 text-danger me-1"></i> Blood Pressure Screening
+                            </span>
+                            {% if result_summary.bp_data and result_summary.bp_data.valid %}
+                                <span class="badge bg-{{ result_summary.bp_data.badge }}-subtle text-{{ result_summary.bp_data.badge }}-emphasis border">
+                                    {{ result_summary.bp_data.systolic }}/{{ result_summary.bp_data.diastolic }} mmHg
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary-subtle text-muted">Reading Not Entered</span>
+                            {% endif %}
+                        </div>
+                        <p class="text-secondary mb-0" style="font-size: 0.775rem;">
+                            {% if result_summary.bp_data and result_summary.bp_data.valid %}
+                                {{ result_summary.bp_data.category }}. {{ result_summary.bp_data.action }}
+                            {% else %}
+                                No blood pressure measurement provided. Consider recording at a local health post.
+                            {% endif %}
+                        </p>
+                    </div>
+
+                    <!-- Community IDRS Module -->
+                    <div class="list-group-item p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <span class="fw-bold text-dark" style="font-size: 0.85rem;">
+                                <i class="bi bi-activity text-warning me-1"></i> Indian Diabetes Risk Score (IDRS)
+                            </span>
+                            <span class="badge bg-{{ result_summary.idrs_data.badge }}-subtle text-{{ result_summary.idrs_data.badge }}-emphasis border font-mono">
+                                {{ result_summary.idrs_data.score }} / 100
+                            </span>
+                        </div>
+                        <div class="fw-semibold text-dark mb-1" style="font-size: 0.8rem;">
+                            {{ result_summary.idrs_data.risk_level }}
+                        </div>
+                        <p class="text-secondary mb-0" style="font-size: 0.775rem;">
+                            {{ result_summary.idrs_data.recommendation }}
+                        </p>
+                    </div>
+
+                    <!-- Machine Learning Classifier Results (if available) -->
+                    {% if result_summary.ml_results %}
+                        {% for ml in result_summary.ml_results %}
+                            <div class="list-group-item p-3 bg-light">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span class="fw-bold text-primary" style="font-size: 0.85rem;">
+                                        <i class="bi bi-cpu text-primary me-1"></i> {{ ml.condition }} (AI ML Model)
+                                    </span>
+                                    <span class="badge bg-primary-subtle text-primary border">
+                                        {{ ml.status_label }}
+                                    </span>
+                                </div>
+                                <div class="d-flex gap-3 mb-2" style="font-size: 0.775rem;">
+                                    <span>Estimated Risk Index: <strong>{{ ml.risk_score }}%</strong></span>
+                                    <span>Classification Confidence: <strong>{{ ml.confidence }}%</strong></span>
+                                </div>
+                                <p class="text-secondary mb-2" style="font-size: 0.775rem;">
+                                    {{ ml.interpretation }}
+                                </p>
+                                {% if ml.contributions %}
+                                    <div class="p-2 bg-white rounded border" style="font-size: 0.725rem;">
+                                        <strong>Top Model Contributing Factors:</strong>
+                                        <ul class="mb-0 ps-3">
+                                            {% for c in ml.contributions %}
+                                                <li>{{ c.feature }}: {{ c.relative_contribution }}% impact ({{ c.direction }})</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+
+                <!-- Missing Information List -->
+                {% if result_summary.missing_measurements %}
+                    <div class="p-3 bg-light border rounded-3 mb-4">
+                        <div class="fw-bold text-secondary mb-2" style="font-size: 0.8rem;">
+                            <i class="bi bi-info-circle text-info me-1"></i> Missing Clinical Measurements & Deferred Models:
+                        </div>
+                        <ul class="mb-0 text-muted ps-3" style="font-size: 0.75rem;">
+                            {% for m in result_summary.missing_measurements %}
+                                <li>{{ m }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+
+                <!-- Action Buttons: Create Referral / Schedule Follow-up -->
+                <div class="d-flex gap-2 flex-wrap mb-3">
+                    <a href="{% url 'referrals_and_followup' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-arrow-up-right-circle me-1"></i> {{ t.create_referral }}
+                    </a>
+                    <a href="{% url 'preventive_guidance' %}" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-shield-check me-1"></i> {{ t.preventive_guidance }}
+                    </a>
+                    <a href="{% url 'ai_assistant' %}" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-chat-dots me-1"></i> Ask AI Assistant
+                    </a>
+                </div>
+
+                <!-- Medical Disclaimer -->
+                <div class="p-2 rounded bg-light border text-muted text-center" style="font-size: 0.7rem;">
+                    {{ t.medical_disclaimer }}
+                </div>
+            </div>
+        {% else %}
+            <!-- Initial Empty State -->
+            <div class="card-premium h-100 d-flex flex-column justify-content-center align-items-center text-center p-5">
+                <div class="p-3 rounded-circle bg-light mb-3" style="width: 70px; height: 70px; display: inline-flex; align-items: center; justify-content: center;">
+                    <i class="bi bi-ui-checks-grid text-primary fs-2"></i>
+                </div>
+                <h5 class="fw-bold text-dark">Unified NCD Screening Portal</h5>
+                <p class="text-secondary mb-4" style="font-size: 0.85rem; max-width: 380px;">
+                    Fill out the screening form on the left. You are NOT required to have laboratory tests to begin; non-invasive triage will be evaluated automatically.
+                </p>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-primary btn-sm" onclick="fillNormalPreset()">
+                        <i class="bi bi-play-circle me-1"></i> Load Demo Sample
+                    </button>
+                    <a href="{% url 'hypertension_screening' %}" class="btn btn-soft-secondary btn-sm">
+                        <i class="bi bi-speedometer2 me-1"></i> BP Module Only
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Local Storage Draft & Presets Script -->
+<script>
+    function fillNormalPreset() {
+        document.getElementById("id_age").value = "32";
+        document.getElementById("id_gender").value = "Female";
+        document.getElementById("id_height_cm").value = "162";
+        document.getElementById("id_weight_kg").value = "58";
+        document.getElementById("id_waist_cm").value = "74";
+        document.getElementById("id_physical_activity").value = "moderate";
+        document.getElementById("id_tobacco_status").value = "never";
+        document.getElementById("id_family_history_diabetes").value = "none";
+        document.getElementById("id_known_hypertension").value = "0";
+        document.getElementById("id_known_heart_disease").value = "0";
+        document.getElementById("id_systolic_bp").value = "118";
+        document.getElementById("id_diastolic_bp").value = "76";
+        document.getElementById("id_fasting_glucose").value = "88";
+        document.getElementById("id_hba1c").value = "5.1";
+    }
+
+    function fillElevatedPreset() {
+        document.getElementById("id_age").value = "54";
+        document.getElementById("id_gender").value = "Male";
+        document.getElementById("id_height_cm").value = "168";
+        document.getElementById("id_weight_kg").value = "82";
+        document.getElementById("id_waist_cm").value = "94";
+        document.getElementById("id_physical_activity").value = "sedentary";
+        document.getElementById("id_tobacco_status").value = "current_beedi_cigarette";
+        document.getElementById("id_family_history_diabetes").value = "both";
+        document.getElementById("id_known_hypertension").value = "1";
+        document.getElementById("id_known_heart_disease").value = "0";
+        document.getElementById("id_systolic_bp").value = "146";
+        document.getElementById("id_diastolic_bp").value = "92";
+        document.getElementById("id_fasting_glucose").value = "145";
+        document.getElementById("id_hba1c").value = "7.2";
+    }
+
+    // Local Storage draft preservation for slow / unreliable connection resilience
+    document.addEventListener("DOMContentLoaded", function() {
+        const form = document.getElementById("unifiedScreeningForm");
+        if (form) {
+            const savedDraft = localStorage.getItem("mp_screening_draft");
+            if (savedDraft) {
+                try {
+                    const data = JSON.parse(savedDraft);
+                    for (const key in data) {
+                        const input = document.getElementById("id_" + key);
+                        if (input && !input.value) input.value = data[key];
+                    }
+                    const notice = document.getElementById("draftNotice");
+                    if (notice) notice.classList.remove("d-none");
+                } catch(e) {}
+            }
+
+            form.addEventListener("input", function() {
+                const formData = {};
+                const elements = form.elements;
+                for (let i = 0; i < elements.length; i++) {
+                    const el = elements[i];
+                    if (el.name && el.name !== "csrfmiddlewaretoken") {
+                        formData[el.name] = el.value;
+                    }
+                }
+                localStorage.setItem("mp_screening_draft", JSON.stringify(formData));
+            });
+        }
+    });
+</script>
+
+{% endblock %}

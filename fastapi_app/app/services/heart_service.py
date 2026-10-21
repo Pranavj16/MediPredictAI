@@ -1,21 +1,20 @@
 from pathlib import Path
 import joblib
 import pandas as pd
+from app.services.explainability import (
+    compute_feature_contributions,
+    build_explanation_response
+)
 
-# Project Root
 BASE_DIR = Path(__file__).resolve().parents[3]
-
-# Trained Models Folder
 MODEL_DIR = BASE_DIR / "ml_training" / "trained_models"
 
-# Load Model Files
 model = joblib.load(MODEL_DIR / "heart_model.pkl")
 scaler = joblib.load(MODEL_DIR / "heart_scaler.pkl")
 columns = joblib.load(MODEL_DIR / "heart_columns.pkl")
 
 
 def predict_heart(data):
-
     patient = pd.DataFrame([data])
 
     patient = pd.get_dummies(
@@ -34,13 +33,22 @@ def predict_heart(data):
         fill_value=0
     )
 
-    patient = scaler.transform(patient)
+    patient_scaled = scaler.transform(patient)
 
-    prediction = model.predict(patient)[0]
+    prediction = int(model.predict(patient_scaled)[0])
 
-    probability = model.predict_proba(patient)[0].max()
+    if hasattr(model, "predict_proba"):
+        proba = model.predict_proba(patient_scaled)[0]
+        risk_score = float(proba[1] * 100.0)
+        confidence = float(proba[prediction] * 100.0)
+    else:
+        risk_score = 100.0 if prediction == 1 else 0.0
+        confidence = 85.0
 
-    return {
-        "prediction": int(prediction),
-        "probability": round(float(probability * 100), 2)
-    }
+    contributions = compute_feature_contributions(
+        model, scaler, columns, patient_scaled, "heart"
+    )
+
+    return build_explanation_response(
+        "heart", prediction, risk_score, confidence, contributions
+    )

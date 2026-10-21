@@ -140,13 +140,49 @@ Access the web portal at `http://127.0.0.1:8001`.
 
 ---
 
-## 🧠 Clinical AI Models & Accuracy
+## 🧠 Clinical AI Models & Actual Architecture (Post-Audit)
 
-| Clinical Condition | Model Architecture | Training Records | Key Biomarkers |
-| :--- | :--- | :--- | :--- |
-| **Diabetes Risk** | Random Forest / SVM | 100,000 | Glucose, HbA1c, BMI, Age, Hypertension |
-| **Heart Disease** | Random Forest | 918 | Chest Pain Type, Resting BP, Cholesterol, EKG, Max HR |
-| **Chronic Kidney Disease** | Random Forest | 400 | Specific Gravity, Albumin, Creatinine, Urea, Hemoglobin |
-| **Liver Disease** | Random Forest | 583 | Total & Direct Bilirubin, SGPT (ALT), SGOT (AST), AG Ratio |
-| **Parkinson's Disease** | Random Forest | 195 | Vocal Jitter, Shimmer, Fo, Fhi, Flo, Spread1, RPDE |
-| **Stroke Risk** | Random Forest | 5,110 | Avg Glucose Level, BMI, Hypertension, Heart Disease, Age |
+| Clinical Condition | Model Architecture | Training Records | Key Biomarkers & Features | Intended Use & Limitations |
+| :--- | :--- | :--- | :--- | :--- |
+| **Diabetes Risk** | `RandomForestClassifier` | 96,146 | Glucose, HbA1c, BMI, Age, Hypertension, Smoking | Screening triage based on metabolic vitals. Calibrated to 0–100% risk index. |
+| **Heart Disease** | `KNeighborsClassifier` (k=5) | 918 | Resting BP, Cholesterol, Max HR, ST Slope, Chest Pain | Pattern matching against Cleveland/Hungarian clinical cohorts. Requires stress-test biometrics. |
+| **Chronic Kidney Disease** | `RandomForestClassifier` | 400 | Serum Creatinine, Blood Urea, Specific Gravity, Albumin, BP | Diagnostic indicator profiling. Highly sensitive; small sample size (Apollo Hospitals). |
+| **Liver Disease** | `LogisticRegression` | 583 | Total & Direct Bilirubin, SGPT (ALT), SGOT (AST), Albumin | ILPD Andhra Pradesh cohort. Linear odds model; low specificity (21%), high sensitivity (94.7%). |
+| **Parkinson's Disease** | `RandomForestClassifier` | 195 | Vocal Jitter, Shimmer, Pitch Period Entropy (PPE), HNR | High sensitivity to sustained vowel phonation. Requires calibrated audio capture. |
+| **Stroke Risk** | `LogisticRegression` | 5,110 | Avg Glucose Level, BMI, Hypertension, Heart Disease, Age | Low base prevalence (4.9%). Calibrated probability triage; not an absolute future event predictor. |
+
+---
+
+## 🇮🇳 India-Specific NCD Clinical Guidelines Implemented
+
+1. **Asian-Indian BMI Cutoffs (ICMR / WHO-SEARO / Consensus Guidelines for Asian Indians):**
+   * `< 18.5 kg/m²`: Underweight
+   * `18.5 – 22.9 kg/m²`: Normal Range (standard global threshold is 24.9)
+   * `23.0 – 24.9 kg/m²`: Overweight / Increased Risk
+   * `≥ 25.0 kg/m²`: Generalized Obesity (standard global threshold is 30.0)
+
+2. **Dedicated Blood Pressure Screening (Indian Guidelines on Hypertension - IGH-IV / ICMR):**
+   * `Systolic < 120 AND Diastolic < 80 mmHg`: Optimal / Normal
+   * `Systolic 120–129 AND Diastolic < 80 mmHg`: Prehypertension
+   * `Systolic 130–139 OR Diastolic 80–89 mmHg`: Stage 1 Hypertension (requires repeat check in 1–2 weeks)
+   * `Systolic 140–179 OR Diastolic 90–119 mmHg`: Stage 2 Hypertension (formal medical evaluation needed)
+   * `Systolic ≥ 180 OR Diastolic ≥ 120 mmHg`: **Hypertensive Crisis** (Urgent Emergency Referral Flagged)
+
+3. **Frontline Community Health Worker (CHW / ASHA / ANM) Portal:**
+   * Simplified patient intake with informed consent recording (`consent_given`, `consent_date`, `consent_notes`).
+   * Low-bandwidth optimized screening entry with automatic localStorage draft preservation.
+   * Searchable patient roster, pending referral tracking, and printable bilingual screening summaries.
+
+4. **Trilingual Localization:**
+   * Full platform support in **English (`en`)**, **Hindi (`hi`)**, and **Marathi (`mr`)**.
+   * Instant language toggle via navigation header with session-persisted preference.
+
+5. **Explainable AI (XAI) & Safety Guardrails:**
+   * Dynamic feature attribution (relative contribution % and direction) for all 6 disease models.
+   * Clear, non-diagnostic clinical interpretations and non-alarmist language.
+   * Prominent non-diagnostic disclaimers: AI predictions are screening tools, not clinical diagnoses.
+
+6. **Medically Grounded AI Health Education Assistant:**
+   * Retrieval-Augmented Generation (RAG) knowledge engine grounded in ICMR, WHO-SEARO, and NHM public health documents.
+   * Hard medical safety boundaries: Rejects requests to prescribe medication, alter prescribed dosages, or claim definitive diagnoses.
+

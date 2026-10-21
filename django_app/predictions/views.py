@@ -13,6 +13,7 @@ from .forms import (
     ParkinsonPredictionForm,
     StrokePredictionForm
 )
+from patients.models import Patient, RecordedMeasurement, PredictionRecord, AuditEvent
 
 # Add fastapi_app to sys.path to enable local ML prediction service fallback
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -34,6 +35,118 @@ except Exception as e:
     predict_liver = None
     predict_parkinson = None
     predict_stroke = None
+
+
+def persist_prediction_and_measurements(user, condition, data, prediction_result):
+    """
+    Persists ML prediction record and extracts actual laboratory/clinical measurements
+    into RecordedMeasurement table to maintain longitudinal health history.
+    """
+    if not user.is_authenticated or not prediction_result:
+        return
+
+    patient = Patient.objects.filter(user=user).first()
+    if not patient:
+        full_name = f"{user.first_name} {user.last_name}".strip() or user.username
+        phone = user.profile.phone_number if hasattr(user, 'profile') else ""
+        center = user.profile.assigned_center if hasattr(user, 'profile') else ""
+        patient = Patient.objects.create(
+            user=user,
+            registered_by=user,
+            full_name=full_name,
+            phone_number=phone,
+            center=center,
+            consent_given=True
+        )
+
+    # 1. Save Prediction Record
+    PredictionRecord.objects.create(
+        patient=patient,
+        conducted_by=user,
+        condition=condition,
+        model_name=prediction_result.get("model_name", f"{condition.title()} Classifier"),
+        inputs=data,
+        prediction=prediction_result.get("prediction", 0),
+        risk_score=prediction_result.get("risk_score", 0.0),
+        confidence=prediction_result.get("confidence", 0.0),
+        feature_contributions=prediction_result.get("feature_contributions", []),
+        clinical_interpretation=prediction_result.get("interpretation", ""),
+        limitations=prediction_result.get("limitations", "")
+    )
+
+    # 2. Extract and Save Relevant Clinical Measurements
+    try:
+        if condition == "diabetes":
+            if "bmi" in data:
+                RecordedMeasurement.objects.create(
+                    patient=patient, recorded_by=user, measurement_type="bmi",
+                    value_numeric=float(data["bmi"]), unit="kg/m²", source="self_reported"
+                )
+            if "HbA1c_level" in data:
+                RecordedMeasurement.objects.create(
+                    patient=patient, recorded_by=user, measurement_type="hba1c",
+                    value_numeric=float(data["HbA1c_level"]), unit="%", source="self_reported"
+                )
+            if "blood_glucose_level" in data:
+                RecordedMeasurement.objects.create(
+                    patient=patient, recorded_by=user, measurement_type="blood_glucose",
+                    value_numeric=float(data["blood_glucose_level"]), unit="mg/dL", source="self_reported"
+                )
+
+        elif condition == "heart":
+            if "RestingBP" in data:
+                RecordedMeasurement.objects.create(
+                    patient=patient, recorded_by=user, measurement_type="blood_pressure",
+                    value_numeric=float(data["RestingBP"]), secondary_numeric=80.0,
+                    unit="mmHg", context="resting_seated", source="self_reported"
+                )
+            if "Cholesterol" in data and float(data["Cholesterol"]) > 0:
+                RecordedMeasurement.objects.create(
+                    patient=patient, recorded_by=user, measurement_type="total_cholesterol",
+                    value_numeric=float(data["Cholesterol"]), unit="mg/dL", source="self_reported"
+                )
+
+        elif condition == "kidney":
+            if "bp" in data:
+                RecordedMeasurement.objects.create(
+                    patient=patient, recorded_by=user, measurement_type="blood_pressure",
+                    value_numeric=float(data["bp"]), secondary_numeric=80.0,
+                    unit="mmHg", source="clinic_lab"
+                )
+            if "sc" in data and str(data["sc"]).replace('.', '', 1).isdigit():
+                RecordedMeasurement.objects.create(
+                    patient=patient, recorded_by=user, measurement_type="serum_creatinine",
+                    value_numeric=float(data["sc"]), unit="mg/dL", source="clinic_lab"
+                )
+
+        elif condition == "liver":
+            if "tot_bilirubin" in data:
+                RecordedMeasurement.objects.create(
+                    patient=patient, recorded_by=user, measurement_type="bilirubin",
+                    value_numeric=float(data["tot_bilirubin"]), unit="mg/dL", source="clinic_lab"
+                )
+
+        elif condition == "stroke":
+            if "bmi" in data:
+                RecordedMeasurement.objects.create(
+                    patient=patient, recorded_by=user, measurement_type="bmi",
+                    value_numeric=float(data["bmi"]), unit="kg/m²", source="self_reported"
+                )
+            if "avg_glucose_level" in data:
+                RecordedMeasurement.objects.create(
+                    patient=patient, recorded_by=user, measurement_type="blood_glucose",
+                    value_numeric=float(data["avg_glucose_level"]), unit="mg/dL", source="self_reported"
+                )
+    except Exception as err:
+        print(f"Error extracting measurements in {condition}: {err}")
+
+    # Audit event
+    AuditEvent.objects.create(
+        user=user,
+        patient=patient,
+        action=f"PREDICTION_{condition.upper()}",
+        details=f"Result: {prediction_result.get('status_label')}, Risk: {prediction_result.get('risk_score')}%"
+    )
 
 
 def get_prediction_result(endpoint_name, data, fallback_func):
@@ -89,6 +202,8 @@ def diabetes_prediction(request):
                 "blood_glucose_level": form.cleaned_data["blood_glucose_level"],
             }
             prediction = get_prediction_result("diabetes", data, predict_diabetes)
+            if prediction:
+                persist_prediction_and_measurements(request.user, "diabetes", data, prediction)
     else:
         form = DiabetesPredictionForm()
 
@@ -124,6 +239,8 @@ def heart_prediction(request):
                 "ST_Slope": form.cleaned_data["ST_Slope"],
             }
             prediction = get_prediction_result("heart", data, predict_heart)
+            if prediction:
+                persist_prediction_and_measurements(request.user, "heart", data, prediction)
     else:
         form = HeartPredictionForm()
 
@@ -172,6 +289,8 @@ def kidney_prediction(request):
                 "ane": form.cleaned_data["ane"],
             }
             prediction = get_prediction_result("kidney", data, predict_kidney)
+            if prediction:
+                persist_prediction_and_measurements(request.user, "kidney", data, prediction)
     else:
         form = KidneyPredictionForm()
 
@@ -206,6 +325,8 @@ def liver_prediction(request):
                 "alkphos": form.cleaned_data["alkphos"],
             }
             prediction = get_prediction_result("liver", data, predict_liver)
+            if prediction:
+                persist_prediction_and_measurements(request.user, "liver", data, prediction)
     else:
         form = LiverPredictionForm()
 
@@ -229,6 +350,8 @@ def parkinson_prediction(request):
         if form.is_valid():
             data = form.cleaned_data
             prediction = get_prediction_result("parkinson", data, predict_parkinson)
+            if prediction:
+                persist_prediction_and_measurements(request.user, "parkinson", data, prediction)
     else:
         form = ParkinsonPredictionForm()
 
@@ -252,6 +375,8 @@ def stroke_prediction(request):
         if form.is_valid():
             data = form.cleaned_data
             prediction = get_prediction_result("stroke", data, predict_stroke)
+            if prediction:
+                persist_prediction_and_measurements(request.user, "stroke", data, prediction)
     else:
         form = StrokePredictionForm()
 

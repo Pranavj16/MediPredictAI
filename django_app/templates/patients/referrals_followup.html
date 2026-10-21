@@ -1,0 +1,229 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}MediPredictAI — {{ t.referral_management }}{% endblock %}
+
+{% block page_title %}{{ t.referral_management }}{% endblock %}
+
+{% block content %}
+
+<!-- Header -->
+<div class="card-premium mb-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+        <div>
+            <h4 class="mb-1 fw-bold text-dark tracking-tight">{{ t.referral_management }}</h4>
+            <p class="text-secondary mb-0" style="font-size: 0.825rem;">
+                Closing the loop from screening risk detection to clinical consultation and confirmatory follow-up.
+            </p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newReferralModal">
+                <i class="bi bi-plus-circle me-1"></i> {{ t.create_referral }}
+            </button>
+            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#newTaskModal">
+                <i class="bi bi-calendar-plus me-1"></i> {{ t.schedule_followup }}
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Workflow Diagram Banner -->
+<div class="card-premium mb-4 p-3 bg-light border">
+    <div class="d-flex align-items-center justify-content-between flex-wrap text-center gap-2" style="font-size: 0.775rem;">
+        <div class="px-3 py-2 rounded bg-white border shadow-xs">
+            <i class="bi bi-ui-checks-grid text-primary me-1"></i> 1. Screening Complete
+        </div>
+        <i class="bi bi-arrow-right text-muted d-none d-md-inline"></i>
+        <div class="px-3 py-2 rounded bg-white border shadow-xs">
+            <i class="bi bi-clipboard-pulse text-warning me-1"></i> 2. Assessment Recommended
+        </div>
+        <i class="bi bi-arrow-right text-muted d-none d-md-inline"></i>
+        <div class="px-3 py-2 rounded bg-white border shadow-xs">
+            <i class="bi bi-hospital text-danger me-1"></i> 3. Referral Recorded
+        </div>
+        <i class="bi bi-arrow-right text-muted d-none d-md-inline"></i>
+        <div class="px-3 py-2 rounded bg-white border shadow-xs">
+            <i class="bi bi-calendar-check text-info me-1"></i> 4. Appointment Scheduled
+        </div>
+        <i class="bi bi-arrow-right text-muted d-none d-md-inline"></i>
+        <div class="px-3 py-2 rounded bg-white border shadow-xs">
+            <i class="bi bi-check-circle-fill text-success me-1"></i> 5. Follow-up Completed
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Active Referrals Column -->
+    <div class="col-lg-7">
+        <div class="card-premium h-100">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <h5 class="fw-bold text-dark mb-0">Recorded Clinical Referrals</h5>
+                <span class="badge bg-light text-muted font-mono" style="font-size: 0.725rem;">{{ referrals|length }} Records</span>
+            </div>
+
+            {% if referrals %}
+                <div class="list-group list-group-flush">
+                    {% for ref in referrals %}
+                        <div class="list-group-item px-0 py-3 border-bottom">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">
+                                        <i class="bi bi-hospital text-primary me-1"></i> {{ ref.referred_to_facility }}
+                                    </h6>
+                                    <div class="text-muted" style="font-size: 0.775rem;">
+                                        Patient: <strong>{{ ref.patient.full_name }}</strong> ({{ ref.patient.patient_identifier }})
+                                        {% if ref.department %} | Dept: {{ ref.department }}{% endif %}
+                                    </div>
+                                </div>
+                                <span class="badge {% if ref.status == 'completed' %}bg-success-subtle text-success-emphasis border-success-subtle{% elif ref.urgency == 'urgent_emergency' %}bg-danger-subtle text-danger-emphasis border-danger-subtle{% else %}bg-warning-subtle text-warning-emphasis border-warning-subtle{% endif %} border">
+                                    {{ ref.get_status_display }}
+                                </span>
+                            </div>
+                            <p class="text-secondary mb-2" style="font-size: 0.8rem;">
+                                <strong>Clinical Reason:</strong> {{ ref.reason }}
+                            </p>
+                            <div class="d-flex justify-content-between align-items-center text-muted" style="font-size: 0.725rem;">
+                                <span>Urgency: <strong class="text-capitalize">{{ ref.get_urgency_display }}</strong></span>
+                                <span>Recorded on: {{ ref.created_at|date:"M d, Y" }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="p-5 text-center text-muted">
+                    <i class="bi bi-hospital fs-1 text-secondary opacity-50 mb-2"></i>
+                    <p class="mb-0" style="font-size: 0.85rem;">No active referrals currently recorded.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Scheduled Follow-up Tasks Column -->
+    <div class="col-lg-5">
+        <div class="card-premium h-100">
+            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                <h5 class="fw-bold text-dark mb-0">Follow-up Task Tracker</h5>
+                <span class="badge bg-light text-muted font-mono" style="font-size: 0.725rem;">Continuity Checklist</span>
+            </div>
+
+            {% if followups %}
+                <div class="list-group list-group-flush">
+                    {% for task in followups %}
+                        <div class="list-group-item px-0 py-2 border-bottom">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="fw-bold text-dark" style="font-size: 0.825rem;">
+                                    {{ task.get_task_type_display }}
+                                </span>
+                                <span class="badge bg-light text-dark font-mono border" style="font-size: 0.7rem;">
+                                    Due: {{ task.scheduled_date|date:"M d, Y" }}
+                                </span>
+                            </div>
+                            <div class="text-muted mb-1" style="font-size: 0.75rem;">
+                                Patient: {{ task.patient.full_name }}
+                            </div>
+                            {% if task.notes %}
+                                <p class="text-secondary mb-0" style="font-size: 0.75rem;">
+                                    {{ task.notes }}
+                                </p>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="p-4 text-center text-muted">
+                    <i class="bi bi-calendar-check fs-2 mb-2 text-secondary opacity-50"></i>
+                    <p class="mb-0" style="font-size: 0.85rem;">No follow-up tasks currently assigned.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Create Referral -->
+<div class="modal fade" id="newReferralModal" tabindex="-1" aria-labelledby="newReferralModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content card-premium p-0 border-0">
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="create_referral" value="1">
+                <div class="modal-header border-bottom p-3">
+                    <h5 class="modal-title fw-bold text-dark" id="newReferralModalLabel">
+                        <i class="bi bi-hospital text-primary me-1"></i> Record Clinical Referral
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem;">Patient Identifier (Optional if self)</label>
+                        <input type="text" name="target_patient_id" class="form-control" placeholder="{{ patient.patient_identifier|default:'Patient ID' }}" value="{{ patient.patient_identifier }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem;">Referred Facility (PHC / CHC / Hospital) *</label>
+                        {{ referral_form.referred_to_facility }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem;">Department (Optional)</label>
+                        {{ referral_form.department }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem;">Urgency Priority</label>
+                        {{ referral_form.urgency }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem;">Clinical Justification / Reason *</label>
+                        {{ referral_form.reason }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem;">Scheduled Appointment Date (If known)</label>
+                        {{ referral_form.appointment_date }}
+                    </div>
+                </div>
+                <div class="modal-footer border-top p-3">
+                    <button type="button" class="btn btn-soft-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-3">Save Referral</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Schedule Follow-up Task -->
+<div class="modal fade" id="newTaskModal" tabindex="-1" aria-labelledby="newTaskModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content card-premium p-0 border-0">
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="create_task" value="1">
+                <div class="modal-header border-bottom p-3">
+                    <h5 class="modal-title fw-bold text-dark" id="newTaskModalLabel">
+                        <i class="bi bi-calendar-check text-info me-1"></i> Schedule Follow-up Task
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem;">Patient Identifier</label>
+                        <input type="text" name="target_patient_id" class="form-control" value="{{ patient.patient_identifier }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem;">Task Protocol *</label>
+                        {{ task_form.task_type }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem;">Scheduled Due Date *</label>
+                        {{ task_form.scheduled_date }}
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold" style="font-size: 0.8rem;">Instructions / Notes</label>
+                        {{ task_form.notes }}
+                    </div>
+                </div>
+                <div class="modal-footer border-top p-3">
+                    <button type="button" class="btn btn-soft-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary btn-sm px-3">Schedule Follow-up</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

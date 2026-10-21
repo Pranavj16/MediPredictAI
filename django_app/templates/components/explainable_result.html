@@ -1,0 +1,132 @@
+<!-- Explainable AI Clinical Assessment Result Card Component -->
+<div class="card-premium h-100" style="background: linear-gradient(145deg, #FFFFFF 0%, rgba(59, 130, 246, 0.03) 100%);">
+    <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-3 pb-3 border-bottom">
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-primary-soft text-primary p-2 fs-5 rounded-3">
+                <i class="bi bi-clipboard2-pulse-fill"></i>
+            </span>
+            <div>
+                <h4 class="mb-0 fw-bold text-dark tracking-tight">AI Clinical Screening Assessment</h4>
+                <p class="text-secondary mb-0" style="font-size: 0.775rem;">
+                    {{ prediction.model_name|default:"Calibrated Statistical Classifier" }}
+                </p>
+            </div>
+        </div>
+        <span class="badge badge-success-soft font-mono" style="font-size: 0.725rem;">XAI Calibrated</span>
+    </div>
+
+    <!-- Status & Risk Score Display -->
+    <div class="row g-3 text-center mb-3">
+        <div class="col-6">
+            <div class="p-3 border rounded-3 bg-white shadow-xs">
+                <div class="text-muted fw-bold mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase;">
+                    TRIAGE STATUS
+                </div>
+                {% if prediction.prediction == 1 %}
+                    <span class="badge bg-danger-subtle text-danger-emphasis border border-danger-subtle fs-6 p-2 w-100">
+                        <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ prediction.status_label|default:"Elevated Risk Identified" }}
+                    </span>
+                {% else %}
+                    <span class="badge bg-success-subtle text-success-emphasis border border-success-subtle fs-6 p-2 w-100">
+                        <i class="bi bi-check-circle-fill me-1"></i> {{ prediction.status_label|default:"Low Risk / Expected Range" }}
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="col-6">
+            <div class="p-3 border rounded-3 bg-white shadow-xs">
+                <div class="text-muted fw-bold mb-1" style="font-size: 0.7rem; letter-spacing: 0.05em; text-transform: uppercase;">
+                    ESTIMATED RISK INDEX
+                </div>
+                <h3 class="mb-0 font-mono fw-extrabold {% if prediction.prediction == 1 %}text-danger{% else %}text-success{% endif %}">
+                    {{ prediction.risk_score|floatformat:1 }}%
+                </h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Bar -->
+    <div class="mb-3 p-3 bg-white rounded-3 border">
+        <div class="d-flex justify-content-between mb-1" style="font-size: 0.775rem;">
+            <span class="text-muted fw-semibold">Model Confidence in Output:</span>
+            <span class="fw-bold text-dark font-mono">{{ prediction.confidence|default:92.0|floatformat:1 }}%</span>
+        </div>
+        <div class="progress" style="height: 8px;">
+            <div class="progress-bar {% if prediction.prediction == 1 %}bg-danger{% else %}bg-success{% endif %}" role="progressbar" style="width: {{ prediction.risk_score|floatformat:0 }}%;"></div>
+        </div>
+    </div>
+
+    <!-- Clinical Interpretation -->
+    <div class="p-3 rounded-3 mb-3 border {% if prediction.prediction == 1 %}bg-warning-subtle text-warning-emphasis border-warning-subtle{% else %}bg-success-subtle text-success-emphasis border-success-subtle{% endif %}">
+        <h6 class="fw-bold mb-1" style="font-size: 0.825rem;">
+            <i class="bi bi-info-circle-fill me-1"></i> Clinical Interpretation:
+        </h6>
+        <p class="mb-0" style="font-size: 0.785rem;">
+            {{ prediction.interpretation|default:"Your available information suggests that further assessment may be appropriate. Consider consulting a healthcare professional to determine whether additional testing is needed." }}
+        </p>
+    </div>
+
+    <!-- Explainable Feature Contributions (XAI) -->
+    {% if prediction.feature_contributions %}
+        <div class="mb-3 p-3 bg-white rounded-3 border shadow-xs">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-bold text-dark mb-0" style="font-size: 0.825rem;">
+                    <i class="bi bi-bar-chart-fill text-primary me-1"></i> Important Contributing Features (XAI):
+                </h6>
+                <span class="badge bg-light text-muted font-mono" style="font-size: 0.675rem;">Top Attributions</span>
+            </div>
+            <ul class="mb-0 ps-3" style="font-size: 0.775rem;">
+                {% for feat in prediction.feature_contributions %}
+                    <li class="mb-1">
+                        <strong>{{ feat.feature }}</strong>: {{ feat.relative_contribution }}% relative weight
+                        <span class="badge {% if feat.direction == 'increases_risk' %}bg-danger-subtle text-danger-emphasis{% else %}bg-success-subtle text-success-emphasis{% endif %} border ms-1" style="font-size: 0.675rem;">
+                            {% if feat.direction == 'increases_risk' %}+ Risk Contributor{% else %}- Protective Factor{% endif %}
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+            <div class="text-muted mt-2 pt-1 border-top" style="font-size: 0.7rem;">
+                <i class="bi bi-shield-exclamation me-1"></i> Statistical feature importance reflects algorithmic patterns and does NOT prove individual clinical causation.
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Recommendations List -->
+    <div class="p-3 bg-light rounded-3 border mb-3">
+        <h6 class="fw-bold text-dark mb-2" style="font-size: 0.825rem;">
+            <i class="bi bi-check2-square text-success me-1"></i> Recommended Next Actions:
+        </h6>
+        <ul class="mb-0 ps-3 text-secondary" style="font-size: 0.775rem;">
+            {% for rec in prediction.recommendations %}
+                <li>{{ rec }}</li>
+            {% empty %}
+                <li>Schedule a clinical consultation with your physician to discuss these results.</li>
+                <li>Maintain routine preventive screenings and healthy lifestyle practices.</li>
+                <li>Do not change prescribed medications based solely on this assessment.</li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="d-flex gap-2 flex-wrap mb-3">
+        <a href="{% url 'referrals_and_followup' %}" class="btn btn-sm btn-outline-primary">
+            <i class="bi bi-arrow-up-right-circle me-1"></i> Record Clinic Referral
+        </a>
+        <a href="{% url 'preventive_guidance' %}" class="btn btn-sm btn-outline-success">
+            <i class="bi bi-shield-check me-1"></i> Preventive Guidance
+        </a>
+        <a href="{% url 'health_trends' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-graph-up me-1"></i> View Trends
+        </a>
+    </div>
+
+    <!-- Model Limitations & Disclaimers -->
+    <div class="p-2 rounded bg-light border text-muted mt-auto" style="font-size: 0.7rem;">
+        <div><strong>Model Limitations:</strong> {{ prediction.limitations|default:"Statistical screening model. Intended for triage, not clinical confirmation." }}</div>
+        <div class="mt-1 text-center border-top pt-1">
+            <strong>Medical Notice:</strong> An AI risk prediction is NOT a confirmed diagnosis. Always consult a qualified medical professional.
+        </div>
+    </div>
+</div>
